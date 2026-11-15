@@ -209,7 +209,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.26.1</div>
+    <div class="ver">Prototipo v0.26.2</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -3386,7 +3386,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.26.1';
+const GAME_VERSION = 'v0.26.2';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {

@@ -259,6 +259,7 @@ export const DICT = {
   '(personale)': ['(personal best)', '(record personnel)', '(persönliche Bestzeit)', '(mejor personal)'],
   'taglia il traguardo! Tempo totale {} · ultimo giro': ['crosses the line! Total time {} · last lap', 'franchit la ligne ! Temps total {} · dernier tour', 'überquert die Ziellinie! Gesamtzeit {} · letzte Runde', '¡cruza la meta! Tiempo total {} · última vuelta'],
   '🏁 {} taglia il traguardo! Tempo totale {} · ultimo giro {}{}': ['🏁 {} crosses the line! Total time {} · last lap {}{}', '🏁 {} franchit la ligne ! Temps total {} · dernier tour {}{}', '🏁 {} überquert die Ziellinie! Gesamtzeit {} · letzte Runde {}{}', '🏁 {} ¡cruza la meta! Tiempo total {} · última vuelta {}{}'],
+  'taglia il traguardo! Tempo totale {} · ultimo giro {} 🟣 giro più veloce': ['crosses the line! Total time {} · last lap {} 🟣 fastest lap', 'franchit la ligne ! Temps total {} · dernier tour {} 🟣 meilleur tour', 'überquert die Ziellinie! Gesamtzeit {} · letzte Runde {} 🟣 schnellste Runde', '¡cruza la meta! Tiempo total {} · última vuelta {} 🟣 vuelta rápida'],
   'taglia il traguardo! Tempo totale {} · ultimo giro {}': ['crosses the line! Total time {} · last lap {}', 'franchit la ligne ! Temps total {} · dernier tour {}', 'überquert die Ziellinie! Gesamtzeit {} · letzte Runde {}', '¡cruza la meta! Tiempo total {} · última vuelta {}'],
   '{} giro {} in': ['{} lap {} in', '{} tour {} en', '{} Runde {} in', '{} vuelta {} en'],
   'giro {} in': ['lap {} in', 'tour {} en', 'Runde {} in', 'vuelta {} en'],

@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.26.1** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
+Versione attuale: **v0.26.2** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -143,6 +143,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.26.2:** traduzione del "giro più veloce" sul traguardo.
 - **v0.26.1:** pilota della Turismo spostato a sinistra.
 - **v0.26:** numeri di gara, livree, pilota visibile, casco colorato; cordoli che vibrano con il suono e 40 cm di margine in più prima del testacoda.
 - **v0.25:** auto rifatte (Turismo e Formula 1 più dettagliate, pezzi uniti per non rallentare).
@@ -163,6 +164,12 @@ Due voci separate nel menu principale (v0.21):
 - Le bandiere: se sono abbastanza visibili dalla vista di gara.
 - La musica: volume rispetto a motori e folla, e se stanca dopo molte gare.
 - Le traduzioni: qualche frase del registro di gara può suonare meno naturale, perché alcune frasi sono tradotte a pezzi.
+
+## Pubblicazione su itch.io (16/11)
+- Pagina creata da Christian sull'account itch.io **stiledigitale**, per ora in Draft. L'indirizzo era `tactical-raging-simulator` (errore: "raging"): da correggere in `tactical-racing-simulator` prima di renderla pubblica.
+- Si carica lo ZIP con `index.html`, `lib/`, `fonts/`, `lang/` (Kind of project: HTML, "This file will be played in the browser", viewport 1280×720, Mobile friendly orizzontale, Fullscreen button).
+- Copertina 630×500 / 1260×1000 (gruppo di Turismo in curva con il titolo, scritta "TURN-BASED RACING · ONLINE MULTIPLAYER") e 6 screenshot 1920×1080 in inglese (menu, cornice di mira, F1 sotto il portale, replay TV, risultati, stanza multiplayer), preparati il 16/11.
+- Short Description massimo 120 caratteri.
 
 ## Prossimi passi concordati
 1. Rifiniture del multiplayer dopo altre prove (per esempio invito con link, messaggi rapidi, host che passa a un altro giocatore se esce).
