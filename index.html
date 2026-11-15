@@ -206,7 +206,7 @@
     <button class="big" data-go="vOnline">Multiplayer online <small>con gli amici</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.19</div>
+    <div class="ver">Prototipo v0.20</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -1711,7 +1711,7 @@ function confirmMove() {
   if (MP.active) { MP.k++; clearTimeout(MP.timer); c.thinking = false; }
   res.u = aim.u; res.d = aim.d;
   phase = 'anim'; goBtn.disabled = true; aimGroup.visible = false;
-  animateMove(c, res, () => { if (t !== token) return; applyResult(c, res); turnIdx++; if (MP.active) netAfterMove(mk, () => beginTurn()); else beginTurn(); });
+  animateMove(c, res, () => { if (t !== token) return; applyResult(c, res); if (MP.active && c.idle >= 2 && !c.out) mpExpel(c); turnIdx++; if (MP.active) netAfterMove(mk, () => beginTurn()); else beginTurn(); });
 }
 function applyResult(c, r) {
   const prevV = c.v;
@@ -2771,7 +2771,7 @@ async function loadRecords(boxId, track, cls) {
 }
 
 // ---------- mosse in rete ----------
-function netSendMove(c, d, u) { MP.net.send('mv', { k: MP.k, ci: cars.indexOf(c), d, u }); }
+function netSendMove(c, d, u, idle = false) { MP.net.send('mv', { k: MP.k, ci: cars.indexOf(c), d, u, idle }); }
 function onNetMove(m) { if (!MP.active || m.k < MP.k) return; MP.inbox[m.k] = m; netTryInbox(); }
 function netTryInbox() {
   const m = MP.inbox[MP.k];
@@ -2780,7 +2780,10 @@ function netTryInbox() {
   if (cur() !== c) { const j = order.indexOf(c); if (j < 0) return; turnIdx = j; }
   delete MP.inbox[MP.k];
   if (dragging) { dragging = false; controls.enabled = true; }
-  MP.applying = true; aim = { d: m.d, u: m.u };
+  // chi non muove entro il tempo resta fermo; al secondo turno di fila senza muovere viene espulso
+  if (c.human) c.idle = m.idle ? (c.idle || 0) + 1 : 0;
+  if (m.idle) log(`⏱ <b style="color:${c.color}">${c.name}</b> non ha mosso: resta fermo${c.idle >= 2 ? '' : ' (al prossimo turno senza mossa viene espulso)'}.`);
+  MP.applying = true; aim = m.idle ? { d: 0, u: 0 } : { d: m.d, u: m.u };
   try { confirmMove(); } finally { MP.applying = false; }
 }
 // turno di un altro: l'host fa giocare la CPU al posto di chi non risponde
@@ -2790,9 +2793,7 @@ function netAwait(c) {
   const k = MP.k;
   MP.timer = setTimeout(() => {
     if (!MP.active || MP.k !== k || cur() !== c || MP.inbox[k]) return;
-    const best = aiChoose(carState(c), othersOf(c), AI.normale);
-    log(`⏱ <b style="color:${c.color}">${c.name}</b> non ha mosso in tempo: parte la mossa automatica.`);
-    netSendMove(c, best.d, best.u);
+    netSendMove(c, 0, 0, true);
   }, (MP_TURN_SEC + 8) * 1000);
 }
 const carState = c => ({ x: c.x, z: c.z, a: c.a, idx: c.idx, v: c.v, accel: c.accel, brake: c.brake, grip: c.grip, vmax: c.vmax, lat: c.lat, draft: c.draft, lastSteer: c.lastSteer || 0 });
@@ -2804,8 +2805,13 @@ function onNetGone(d) {
   }
   updateRank();
 }
+
+function mpExpel(c) {
+  retire(c, 'espulso: non ha mosso per due turni di fila');
+  if (c.owner === myId) banner('ESPULSO', '#ff4757', 'non hai mosso per due turni di fila');
+}
 // dopo ogni mossa: l'host manda la fotografia ufficiale, gli altri la applicano prima di continuare
-const FIX_KEYS = ['x', 'z', 'a', 'idx', 'v', 'progress', 'skip', 'stuck', 'tyre', 'fuel', 'fuelUsed', 'dmg', 'out', 'finished', 'finishPos', 'finishTime', 'time', 'lapStart', 'laps', 'best', 'inPit', 'pitTurns', 'pitWork', 'boxReq', 'draft', 'lastSteer', 'netGone'];
+const FIX_KEYS = ['idle', 'x', 'z', 'a', 'idx', 'v', 'progress', 'skip', 'stuck', 'tyre', 'fuel', 'fuelUsed', 'dmg', 'out', 'finished', 'finishPos', 'finishTime', 'time', 'lapStart', 'laps', 'best', 'inPit', 'pitTurns', 'pitWork', 'boxReq', 'draft', 'lastSteer', 'netGone'];
 function netAfterMove(k, next) {
   if (MP.host) {
     MP.net.send('fix', { k, round, turnIdx, finishCount, order: order.map(c => cars.indexOf(c)), cars: cars.map(c => Object.fromEntries(FIX_KEYS.map(f => [f, c[f]]))) });
@@ -2889,7 +2895,7 @@ updateResumeBtn();
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.19';
+const GAME_VERSION = 'v0.20';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
@@ -2988,7 +2994,7 @@ renderer.setAnimationLoop(now => {
     const before = Math.ceil(turnLeft); turnLeft -= Math.min(rawDt, 0.5); if (Math.ceil(turnLeft) !== before && turnLeft <= 5 && turnLeft > 0) sfx.tick();
     $('timerLbl').textContent = Math.max(0, Math.ceil(turnLeft)); $('timerBar').style.width = `${clamp(turnLeft / turnMax(), 0, 1) * 100}%`;
     $('timerBar').style.background = turnLeft < 5 ? '#ff4757' : '#f4b400';
-    if (turnLeft <= 0) { if (dragging) { dragging = false; controls.enabled = true; } log(`⏱ <b style="color:${cur().color}">${cur().name}</b>: tempo scaduto, parte la mossa impostata.`); confirmMove(); }
+    if (turnLeft <= 0) { if (dragging) { dragging = false; controls.enabled = true; } if (MP.active) { netSendMove(cur(), 0, 0, true); } else { log(`⏱ <b style="color:${cur().color}">${cur().name}</b>: tempo scaduto, parte la mossa impostata.`); confirmMove(); } }
   }
   handle.rotation.y = now * 0.002;
   sun.position.copy(controls.target).add(SUN_OFF); sun.target.position.copy(controls.target);
