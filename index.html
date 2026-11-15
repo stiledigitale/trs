@@ -2192,9 +2192,18 @@ function animateMove(c, r, done) {
   const dur = (r.pts.length < 2 ? 250 : clamp(700 + r.speed * 9, 800, 1700)) * animF();
   if (OPT.autocam && camWatch(c)) follow = c;
   const plan = skidPlan(c, r), brakeUse = (c.v - r.speed) / Math.max(1, c.base.brake);
-  anims.push({ t0: performance.now(), dur, c, r, done, spin: r.status === 'off' ? 700 * animF() : 0, plan, mk: 0, bf: (brakeUse > 0.4 && Math.random() < 0.6) || (r.speed > c.base.vmax * 0.5 && Math.random() < 0.12) ? 0.15 + Math.random() * 0.2 : -1 });
+  const A = { t0: performance.now(), dur, c, r, done, spin: r.status === 'off' ? 700 * animF() : 0, plan, mk: 0, bf: (brakeUse > 0.4 && Math.random() < 0.6) || (r.speed > c.base.vmax * 0.5 && Math.random() < 0.12) ? 0.15 + Math.random() * 0.2 : -1  };
+  anims.push(A);
+  // la mossa si chiude anche se la scheda è nascosta (il browser non disegna fotogrammi): il gioco non resta mai fermo
+  A.timer = setTimeout(() => finishAnim(A), A.dur + A.spin + 200);
   engineSet(Math.max(r.speed, 15), true);
   if (r.pts.length > 1 && Math.abs(angW(r.pts[r.pts.length - 1].a - r.pts[0].a)) > 0.85) setTimeout(() => sfx.skid(0.7), dur * 0.4);
+}
+function finishAnim(A) {
+  const k = anims.indexOf(A); if (k < 0) return;
+  clearTimeout(A.timer); anims.splice(k, 1);
+  A.c.mesh.position.set(A.r.end.x, 0.05, A.r.end.z); A.c.mesh.rotation.y = -A.r.end.a;
+  follow = null; engineSet(0, false); A.done();
 }
 function stepAnims(now) {
   for (let k = anims.length - 1; k >= 0; k--) {
@@ -2217,7 +2226,7 @@ function stepAnims(now) {
       const f = (e - A.dur) / A.spin, last = pts[pts.length - 1];
       A.c.mesh.position.set(last.x + (A.r.end.x - last.x) * f, 0.05 + Math.sin(f * Math.PI) * 0.6, last.z + (A.r.end.z - last.z) * f);
       A.c.mesh.rotation.y = -(last.a + f * Math.PI * 2.5 * (1 - f) + (A.r.end.a - last.a) * f);
-    } else { anims.splice(k, 1); follow = null; engineSet(0, false); A.done(); }
+    } else finishAnim(A);
   }
 }
 
