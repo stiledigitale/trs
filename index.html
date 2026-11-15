@@ -207,7 +207,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.21</div>
+    <div class="ver">Prototipo v0.21.1</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -489,7 +489,9 @@ function nearestLocal(x, z, hint, win) {
 const latOf = (x, z, i) => (x - S[i].x) * S[i].nx + (z - S[i].z) * S[i].nz;
 function idxDelta(a, b) { let d = b - a; if (d < -N / 2) d += N; if (d > N / 2) d -= N; return d; }
 function trackDist(x, z) { const i = nearestGlobal(x, z); return Math.hypot(x - S[i].x, z - S[i].z); }
+const inBoard = (x, z, m = 0) => x > SL.x0 + m && x < SL.x1 - m && z > SL.z0 + m && z < SL.z1 - m;   // dentro la base del plastico
 function isClear(x, z, r, trackGap = HALF + 4) {
+  if (!inBoard(x, z, r + 1)) return false;
   if (trackDist(x, z) < trackGap + r) return false;
   for (const o of obstacles) if (Math.hypot(x - o.x, z - o.z) < r + o.r) return false;
   return true;
@@ -1181,6 +1183,7 @@ function buildWorld(key) {
       else { x = RX(3); z = RZ(3); }
       if (!isClear(x, z, 1.5, HALF + 7)) continue;
       const y = groundH(x, z), s = 0.7 + rnd() * 0.8, roll = rnd();
+      if (!inBoard(x, z, 3.2 * s + 1.5)) continue;   // la chioma non deve sporgere dal bordo del plastico
       Q.setFromAxisAngle(UP, rnd() * 6);
       if (roll < pP) {
         M.compose(V.set(x, y + 1.2 * s, z), Q, SC.set(s, s, s)); trunk.setMatrixAt(it++, M);
@@ -3084,7 +3087,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.21';
+const GAME_VERSION = 'v0.21.1';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {

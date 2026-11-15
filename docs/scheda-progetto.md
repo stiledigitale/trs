@@ -73,7 +73,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - **Online per ora solo Mini Monza:** le altre due compaiono nella stanza con il lucchetto ("🔒 … · presto"). Nella gara da soli sono tutte disponibili.
 
 ## Grafica e atmosfera (stile "plastico")
-- Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi.
+- Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi. **Niente deve sporgere dal bordo del plastico** (regola di Christian): alberi, rocce e oggetti stanno dentro la base, con margine per la chioma.
 - Muretti con striscioni, reti, gomme rosse e bianche, ghiaia, tribune coperte, box con tetto arancione e torre, postazioni dei commissari con il commissario e la bandiera.
 - Case, palazzi, strada perimetrale, parcheggi, torri faro, mongolfiere, folla animata che esulta.
 - Segni neri sull'asfalto in frenata e testacoda, fumo delle gomme poligonale e trasparente, scoppiettate dallo scarico.
@@ -129,6 +129,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.21.1:** alberi e oggetti sempre dentro il bordo del plastico (prima i boschetti vicino al bordo sporgevano).
 - **v0.21:** partenza con griglia in ordine, casuale o qualifica (anche online); commissari con bandiera gialla e blu; menu "Gioca con gli amici" e "Stanze online" separati; il disconnesso va fuori pista e si ritira.
 
 ## Da verificare giocando
