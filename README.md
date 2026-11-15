@@ -10,6 +10,7 @@ Corse automobilistiche **a turni**, 3D low poly in stile "plastico", di Stile Di
 Il codice è pronto per i portali: tutto incluso nel pacchetto e un **adattatore** unico (`const Portal` in `index.html`) con le funzioni che i portali chiedono: caricamento finito, inizio/fine partita, pubblicità tra le gare, nome del giocatore. Sul sito non fanno niente; per ogni portale si riempiono solo quelle. Il portale si sceglie con `?portal=nome` o `window.TRS_PORTAL`. L'unico servizio esterno è Supabase, disattivabile con `Portal.online = false`.
 
 ## Versioni
+- **v0.17** – salvataggio della partita (solo gare non online): automatico a ogni turno del giocatore, "Salva ed esci" nel menu di pausa, "Riprendi la partita" nel menu principale; replay con telecamera sempre sull'auto protagonista; registro che non copre più il pulsante pausa.
 - **v0.16** – multiplayer online: stanze con codice di 5 lettere, host arbitro, mosse in tempo reale con Supabase Realtime, fotografia ufficiale dopo ogni mossa, 30 secondi per turno, chi esce passa alla CPU. Con `?net=local` la rete è simulata tra schede dello stesso browser.
 - **v0.15** – pronto per i portali: Three.js e font inclusi, adattatore portale, pausa e audio muto con la scheda nascosta o durante le pubblicità, frecce/spazio senza scorrimento della pagina.
 - **v0.14** – classifica online (Supabase): miglior giro e gara completa per pista e classe, invio automatico a fine gara.

@@ -41,6 +41,8 @@
   #hint{font-size:12px;color:#9fb0cc;max-width:250px;line-height:1.35}
   #log{bottom:14px;left:12px;width:300px;font-size:12.5px;line-height:1.45;max-height:150px;overflow:hidden}
   #log div:not(:first-child){opacity:.6}
+  #log{pointer-events:none}
+  @media (max-width:1300px){#log{bottom:88px}}
   .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,14,24,.55);z-index:10}
   #menu{background:linear-gradient(90deg,rgba(10,14,24,.78) 0%,rgba(10,14,24,.35) 45%,rgba(10,14,24,0) 70%)}
   #menu.dim{background:rgba(10,14,24,.55)}
@@ -156,12 +158,13 @@
   <div id="vMain">
     <div class="logo">Tactical<br><span>Racing</span><br>Simulator</div>
     <div class="tag">Corse automobilistiche a turni · 3D low poly</div>
+    <button class="big primary hidden" id="resumeSaved">Riprendi la partita <small id="resumeInfo"></small></button>
     <button class="big primary" data-go="vSetup">Gioca <small>gara rapida</small></button>
     <button class="big" data-opt>Opzioni <small>grafica, CPU, camera</small></button>
     <button class="big" data-go="vOnline">Multiplayer online <small>con gli amici</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.16</div>
+    <div class="ver">Prototipo v0.17</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -253,6 +256,7 @@
       <button class="primary" id="resumeBtn">Riprendi</button>
       <button id="restartBtn">Ricomincia la gara</button>
       <button id="pauseOptBtn">Opzioni</button>
+      <button id="saveQuitBtn">💾 Salva ed esci</button>
       <button id="quitBtn">Menu principale</button>
     </div>
   </div>
@@ -1556,7 +1560,7 @@ function pointInZone(p) {
 function clearCars() { for (const c of cars) { scene.remove(c.mesh, c.trailLine); c.trailLine.geometry.dispose(); } cars = []; anims.length = 0; follow = null; }
 function showGameUI(on) { ['hud', 'rank', 'controls', 'log'].forEach(id => $(id).classList.toggle('hidden', !on)); }
 
-function startGame(cfg) {
+function startGame(cfg, resume) {
   lastCfg = cfg; token++; paused = false; camInit = true; onlineSent = false;
   if (RP) { RP = null; $('replayUI').classList.add('hidden'); controls.enabled = true; }
   ['pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
@@ -1585,7 +1589,7 @@ function startGame(cfg) {
   ['menu', 'pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
   showGameUI(true);
   history = []; roundRec = null; lastHL = -10; officialOrder = []; lastOrder = positions(); lastLapShown = false;
-  startSequence();
+  if (resume) resumeFrom(resume); else startSequence();
 }
 function toMainMenu() {
   Portal.gameplayStop();
@@ -1594,12 +1598,13 @@ function toMainMenu() {
   phase = 'menu'; aimGroup.visible = false;
   clearCars(); showGameUI(false);
   ['pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
-  $('menu').classList.remove('hidden'); showView('vMain');
+  $('menu').classList.remove('hidden'); showView('vMain'); updateResumeBtn();
 }
 function nextRound() { order = cars.filter(c => !c.finished && !c.out).sort((a, b) => b.progress - a.progress); turnIdx = 0; recordRoundStart(); beginTurn(); }
 function beginTurn() {
   if (checkGameOver()) return;
   if (turnIdx >= order.length) { if (maybeHighlight()) return; round++; return nextRound(); }
+  takeSnapshot();   // stato a inizio turno: è quello che si salva
   const c = cur();
   if (c.finished || c.out) { turnIdx++; return beginTurn(); }
   updateRank();
@@ -1640,7 +1645,7 @@ function beginTurn() {
   }
   makeGhost(c.color); buildZone(c);
   aimGroup.visible = true;
-  if (ctl === 'local') { phase = 'aim'; goBtn.disabled = false; turnLeft = turnMax(); updateAim(); }
+  if (ctl === 'local') { phase = 'aim'; goBtn.disabled = false; turnLeft = turnMax(); updateAim(); if (!MP.active) saveGame(); }
   else if (ctl === 'cpu') { phase = 'cpu'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); later(() => cpuPlay(c), 450); }
   else { phase = 'remote'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); netAwait(c); }
   if (MP.active) netTryInbox();
@@ -1724,6 +1729,7 @@ function checkGameOver() {
   $('endSub').textContent = `${TRACKS[trackKey].name} · ${laps} ${laps > 1 ? 'giri' : 'giro'} · livello ${mode}`;
   $('endList').innerHTML = ranked.map((c, i) => `<div class="res"><span class="p">${i + 1}°</span><span class="dot" style="background:${c.color}"></span><span style="flex:1">${c.name} <small style="color:#9fb0cc">· ${c.preset}${c.human ? '' : ' · CPU'}</small><br><small style="color:#9fb0cc">miglior giro ${fmtTime(c.best)}${c.best === fastest ? ' 🟣' : ''}</small></span><span style="font-size:14px;text-align:right">${c.out ? '<span style="color:#ff9aa4">ritirato</span>' : c.finished ? (c === lead ? fmtTime(c.finishTime) : '+' + (c.finishTime - lead.finishTime).toFixed(2) + ' s') : '<span style="color:#9fb0cc">giro ' + Math.min(laps, Math.floor(c.progress / N) + 1) + '</span>'}</span></div>`).join('');
   $('endScreen').classList.remove('hidden'); $('againBtn').textContent = MP.net ? 'Torna alla stanza' : 'Rivincita';
+  if (!MP.active) clearSave();   // gara finita: niente più da riprendere
   Portal.gameplayStop();
   sendOnlineTimes();
   return true;
@@ -2014,6 +2020,10 @@ function startReplay(rounds, opts) {
   $('rpSkip').classList.toggle('hidden', opts.mode !== 'hl');
   updateReplayUI();
   if (opts.mode === 'hl') { sfx.cheer(0.8); }
+  { // la prima inquadratura è già sull'auto protagonista, a inizio round
+    const rr = rounds[0], fi = cars.indexOf(RP.focus), sp = rr && rr.snap[fi];
+    if (sp) { const f = new THREE.Vector3(Math.cos(sp.a), 0, Math.sin(sp.a)), p0 = new THREE.Vector3(sp.x, 0, sp.z); camera.position.copy(p0).addScaledVector(f, -17).add(new THREE.Vector3(0, 7, 0)); controls.target.copy(p0).addScaledVector(f, 7); camera.lookAt(controls.target); }
+  }
 }
 function updateReplayUI() {
   if (!RP) return;
@@ -2063,6 +2073,7 @@ function stepReplay(dt) {
   if (R.camMode === 'auto') { if (R.camT > (R.cam === 'tv' ? 7 : 3.5)) { R.camT = 0; R.cam = R.cam === 'chase' ? 'tv' : 'chase'; } }
   else R.cam = R.camMode;
   const fwd = new THREE.Vector3(Math.cos(-m.rotation.y), 0, Math.sin(-m.rotation.y));
+  let tvOk = false;
   if (R.cam === 'tv' && TV.length) {
     // regia da bordo pista: telecamera fissa davanti all'auto, cambia solo quando l'auto l'ha superata o è troppo lontana
     const cur_ = R.tvCur, rel = cur_ ? cur_.clone().sub(m.position) : null;
@@ -2075,11 +2086,12 @@ function stepReplay(dt) {
       cand.sort((a, b) => a.sc - b.sc);
       for (const c_ of cand.slice(0, 6)) if (clearView(c_.v, m.position)) { best = c_.v; break; }
       if (!best && R.camMode === 'auto') { R.cam = 'chase'; R.camT = 0; }
-      if (best && best !== cur_) { R.tvCur = best; camera.position.copy(best); }
+      if (best && best !== cur_) { R.tvCur = best; camera.position.copy(best); controls.target.copy(m.position).setY(1); }
+      if (!best) R.tvCur = null;   // nessuna torretta vede l'auto in questo tratto: niente telecamera "vecchia" puntata altrove
     }
-    if (R.tvCur) { camera.position.lerp(R.tvCur, 0.2); controls.target.lerp(m.position.clone().setY(1), 0.35); }
-    camera.fov = 38; camera.updateProjectionMatrix();
-  } else {
+    if (R.tvCur) { camera.position.lerp(R.tvCur, 0.2); controls.target.lerp(m.position.clone().setY(1), 0.35); camera.fov = 38; camera.updateProjectionMatrix(); tvOk = true; }
+  }
+  if (!tvOk) {   // inseguimento: anche quando la regia TV non ha una torretta adatta, si segue sempre l'auto protagonista
     if (camera.fov !== 50) { camera.fov = 50; camera.updateProjectionMatrix(); }
     const want = m.position.clone().addScaledVector(fwd, -17).add(new THREE.Vector3(0, R.mode === 'hl' ? 6 : 8, 0));
     camera.position.lerp(want, 0.09); controls.target.lerp(m.position.clone().addScaledVector(fwd, 7), 0.22);
@@ -2369,7 +2381,7 @@ function renderOptions() {
 $('optClose').onclick = () => $('optOverlay').classList.add('hidden');
 
 // pausa / fine
-function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = MP.active ? false : on; $('restartBtn').classList.toggle('hidden', MP.active); $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
+function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = MP.active ? false : on; $('restartBtn').classList.toggle('hidden', MP.active); $('saveQuitBtn').classList.toggle('hidden', MP.active); $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
 $('pauseBtn').onclick = () => setPause(true);
 $('resumeBtn').onclick = () => setPause(false);
 $('restartBtn').onclick = () => launchRace(lastCfg);
@@ -2689,10 +2701,64 @@ function applyFix(f) {
   updateRank(); updateHUD();
 }
 
+
+/* ================== SALVATAGGIO DELLA PARTITA (solo gare non online) ==================
+   A ogni inizio turno si prende la "fotografia" dello stato; all'inizio di ogni turno di un giocatore umano
+   (e con "Salva ed esci") la fotografia viene scritta nel browser. "Riprendi la partita" riparte da lì. */
+const SAVE_KEY = 'trs-partita';
+const SAVE_KEYS = [...FIX_KEYS, 'err', 'trend', 'trendR', 'thinking'];
+let snap = null;
+function takeSnapshot() {
+  if (MP.active || !lastCfg) { snap = null; return; }
+  snap = JSON.parse(JSON.stringify({
+    v: 1, cfg: lastCfg, round, turnIdx, finishCount, lastLapShown,
+    order: order.map(c => cars.indexOf(c)), official: officialOrder.map(c => cars.indexOf(c)), last: lastOrder.map(c => cars.indexOf(c)),
+    cars: cars.map(c => Object.fromEntries(SAVE_KEYS.map(f => [f, c[f] === undefined ? null : c[f]]))),
+  }));
+  snap.histLen = history.length; snap.lastMoves = roundRec ? roundRec.moves.length : 0;
+}
+function saveGame() {
+  if (!snap || MP.active) return false;
+  const h = history.slice(0, snap.histLen).map((r, i, arr) => ({
+    round: r.round, snap: r.snap, ovt: r.ovt || [], best: r.best, label: r.label, focus: r.focus ? cars.indexOf(r.focus) : -1,
+    moves: (i === arr.length - 1 ? r.moves.slice(0, snap.lastMoves) : r.moves).map(m => ({ ...m, pts: m.pts.map(p => ({ x: +p.x.toFixed(2), z: +p.z.toFixed(2), a: +p.a.toFixed(3) })) })),
+  }));
+  const data = { ...snap, at: Date.now(), history: h };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); }
+  catch (e) { try { data.history = []; localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e2) { return false; } }   // spazio pieno: si salva senza il replay
+  return true;
+}
+function loadSave() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); return d && d.v === 1 && TRACKS[d.cfg.track] ? d : null; } catch (e) { return null; } }
+function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} snap = null; updateResumeBtn(); }
+function updateResumeBtn() {
+  const d = loadSave(), b = $('resumeSaved'); b.classList.toggle('hidden', !d);
+  if (d) { const t = new Date(d.at); $('resumeInfo').textContent = `${TRACKS[d.cfg.track].name} · round ${d.round} · ${t.toLocaleDateString('it-IT')} ${t.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`; }
+}
+function resumeFrom(d) {
+  d.cars.forEach((st, i) => {
+    const c = cars[i]; if (!c) return;
+    Object.assign(c, st); c.thinking = false;
+    c.mesh.position.set(c.x, 0.05, c.z); c.mesh.rotation.set(0, -c.a, 0); updatePerf(c);
+    if (c.out || c.finished) c.mesh.traverse(o => { if (o.isMesh && o.material && !o.material.__fin) { o.material = o.material.clone(); o.material.__fin = true; o.material.transparent = true; o.material.opacity = c.out ? 0.4 : 0.45; } });
+  });
+  round = d.round; turnIdx = d.turnIdx; finishCount = d.finishCount; lastLapShown = d.lastLapShown;
+  order = d.order.map(i => cars[i]); officialOrder = d.official.map(i => cars[i]); lastOrder = d.last.map(i => cars[i]);
+  history = (d.history || []).map(r => ({ ...r, focus: r.focus >= 0 ? cars[r.focus] : null }));
+  roundRec = history.length && history[history.length - 1].round === round ? history[history.length - 1] : null;
+  if (!roundRec) recordRoundStart();
+  phase = 'wait'; $('lights').classList.add('hidden');
+  log(`💾 Partita ripresa dal round ${round}.`); banner('SI RIPARTE', '#7dffb1', `round ${round} · ${TRACKS[d.cfg.track].name}`);
+  updateRank(); Portal.gameplayStart();
+  later(() => beginTurn(), 700);
+}
+$('resumeSaved').onclick = () => { const d = loadSave(); if (!d) return updateResumeBtn(); startGame(d.cfg, d); };
+$('saveQuitBtn').onclick = () => { if (MP.active) return; const ok = saveGame(); toMainMenu(); if (!ok) $('resumeInfo').textContent = 'salvataggio non riuscito'; };
+updateResumeBtn();
+
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.16';
+const GAME_VERSION = 'v0.17';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
