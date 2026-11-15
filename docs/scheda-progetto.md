@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.21** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase) e `fonts/` (Rubik): tutto incluso, nessun build, audio sintetizzato.
+Versione attuale: **v0.22** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase) e `fonts/` (Rubik): tutto incluso, nessun build, audio sintetizzato.
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -42,6 +42,8 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
   - **Facile:** traiettoria colorata (verde pulita, arancione contatto, rossa uscita) e avviso **giallo** per le traiettorie pulite ma senza scampo al turno dopo; danni dimezzati, massimo 60%.
   - **Medio:** nessun avviso di uscita di pista (resta quello di contatto); danni pieni ma niente ritiro.
   - **Pro:** **nessun avviso**, né di uscita né di contatto: traiettoria sempre blu. 15 secondi per turno, ritiro con danni ≥ 75% ("se rompi sei fuori").
+  - **Ultra Pro (v0.22):** come il Pro ma con **5 secondi a mossa** (anche in hot-seat e online); allo scadere parte la mossa impostata in quel momento. Nella classifica online i tempi contano come Pro.
+  - Idea scartata da Christian: turni simultanei (tutti muovono insieme). Resta a turni alterni.
 - **Classi:**
   - **Turismo:** assetti Bilanciata, Scatto, Aderenza, Velocità.
   - **Formula 1:** assetti Equilibrata, Trazione, Alto carico, Motore. Monoposto low poly, danni +30%. La velocità massima è circa il 60% più alta delle Turismo; il "27% più veloce" indicato in passato si riferisce probabilmente al tempo sul giro (da verificare).
@@ -129,6 +131,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.22:** livello Ultra Pro con 5 secondi a mossa.
 - **v0.21.1:** alberi e oggetti sempre dentro il bordo del plastico (prima i boschetti vicino al bordo sporgevano).
 - **v0.21:** partenza con griglia in ordine, casuale o qualifica (anche online); commissari con bandiera gialla e blu; menu "Gioca con gli amici" e "Stanze online" separati; il disconnesso va fuori pista e si ritira.
 

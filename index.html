@@ -207,7 +207,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.21.1</div>
+    <div class="ver">Prototipo v0.22</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -219,7 +219,7 @@
     <div class="stats" id="statsHelp"></div>
     <div class="foot">
       <button data-go="vMain">← Indietro</button>
-      <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso (né uscite né contatti) + 15 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Partenza <select id="gridSel"><option value="ordine">Griglia in ordine</option><option value="casuale">Griglia casuale</option><option value="quali">Qualifica (giro lanciato)</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+      <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso (né uscite né contatti) + 15 s a turno</option><option value="ultrapro">Ultra Pro · come il Pro ma solo 5 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Partenza <select id="gridSel"><option value="ordine">Griglia in ordine</option><option value="casuale">Griglia casuale</option><option value="quali">Qualifica (giro lanciato)</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
       <button class="primary" id="startBtn" style="font-size:16px;padding:12px 26px">Via!</button></div>
     </div>
   </div>
@@ -265,7 +265,7 @@
       <label>Pista <select id="lbTrack"><option value="monza">Mini Monza</option><option value="prova" disabled>🔒 Anello di prova · presto</option><option value="dolomiti" disabled>🔒 Valle delle Dolomiti · presto</option></select></label>
       <label>Classe <select id="lbClass"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label>
       <label>Giri <select id="lbLaps"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></label>
-      <label>Livello <select id="lbMode"><option value="facile">Facile</option><option value="medio">Medio</option><option value="pro">Pro</option></select></label>
+      <label>Livello <select id="lbMode"><option value="facile">Facile</option><option value="medio">Medio</option><option value="pro">Pro</option><option value="ultrapro">Ultra Pro (5 s)</option></select></label>
       <label>Usura <select id="lbWear"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label>
       <label>Partenza <select id="lbGrid"><option value="ordine">Griglia in ordine</option><option value="casuale">Griglia casuale</option><option value="quali">Qualifica (giro lanciato)</option></select></label>
       <label>Auto CPU <select id="lbCpu"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
@@ -363,7 +363,8 @@ const LAT_SCALE = 2.8;                // la cornice si allarga meno di quanto si
 const TURN_SEC = DIST;                // ogni turno = 3 secondi di gara; 1 unità = 1 m
 const kmh = d => Math.round(d / TURN_SEC * 3.6);
 const fmtTime = t => { if (t == null) return '—'; const m = Math.floor(t / 60), sec = t - m * 60; return `${m}:${sec.toFixed(2).padStart(5, '0')}`; };
-const PRO_SECONDS = 15;
+const PRO_SECONDS = 15, ULTRA_SECONDS = 5;
+const isPro = () => mode === 'pro' || mode === 'ultrapro';   // Ultra Pro = regole del Pro con 5 secondi a mossa
 const COLORS = ['#e63946', '#1d8bf1', '#f4b400', '#2a9d4a', '#ff7f27', '#8e44ad', '#17c3b2', '#ff5d9e'];
 const DEFAULT_PLAYERS = [
   { on: true,  name: 'Christian', type: 'human', car: 'bilanciata' },
@@ -1504,9 +1505,9 @@ function applyWear(c, r, prevV, uAbs) {
 }
 function addDamage(c, amount, why) {
   amount *= CLASSES[raceClass].dmgMul;
-  c.dmg = Math.min(mode === 'pro' ? 100 : mode === 'medio' ? 90 : 60, c.dmg + amount);
+  c.dmg = Math.min(isPro() ? 100 : mode === 'medio' ? 90 : 60, c.dmg + amount);
   updatePerf(c);
-  if (mode === 'pro' && c.dmg >= 75 && !c.out) retire(c, why || 'danni troppo gravi');
+  if (isPro() && c.dmg >= 75 && !c.out) retire(c, why || 'danni troppo gravi');
 }
 function retire(c, why) {
   c.out = true; c.v = 0; c.boxReq = false; c.inPit = false;
@@ -1545,7 +1546,7 @@ function exitPit(c) {
 function cpuWantsBox(c) {
   const lapNow = Math.floor(c.progress / N) + 1, lapsLeft = laps - lapNow;   // giri che restano dopo il prossimo passaggio sul traguardo
   if (lapsLeft < 1) return false;
-  if (c.dmg >= (mode === 'pro' ? 50 : 45) && lapsLeft >= 1) return true;
+  if (c.dmg >= (isPro() ? 50 : 45) && lapsLeft >= 1) return true;
   if (!wearOn()) return false;
   if (c.tyre >= 72) return true;
   const lapsDone = c.progress / N;
@@ -1611,8 +1612,8 @@ function buildZone(c) {
   zoneMat.color.set(c.color); zoneLine.material.color.set(c.color);
 }
 const hideOff = c => c.human && mode !== 'facile';   // Medio e Pro: niente avviso di uscita di pista
-const hideHit = c => c.human && mode === 'pro';      // Pro: niente avviso di collisione
-const turnMax = () => (MP.active || QUALI.timed) ? MP_TURN_SEC : PRO_SECONDS;
+const hideHit = c => c.human && isPro();      // Pro: niente avviso di collisione
+const turnMax = () => mode === 'ultrapro' ? ULTRA_SECONDS : (MP.active || QUALI.timed) ? MP_TURN_SEC : PRO_SECONDS;
 function updateAim() {
   const c = cur(); if (!c) return;
   preview = resolveMove(c, aim.d, aim.u, 40, othersOf(c));
@@ -2402,7 +2403,7 @@ function updateHUD() {
     $('boxBtn').style.display = (wearOn() || (me && me.dmg > 0)) && laps > 1 ? '' : 'none'; }
   $('lapTimeLbl').textContent = fmtTime(Math.max(0, c.time - c.lapStart));
   $('bestLbl').textContent = fmtTime(c.best);
-  $('timerBox').classList.toggle('hidden', !((mode === 'pro' || MP.active || QUALI.timed) && ctrlOf(c) === 'local' && phase === 'aim'));
+  $('timerBox').classList.toggle('hidden', !((isPro() || MP.active || QUALI.timed) && ctrlOf(c) === 'local' && phase === 'aim'));
   const deg = Math.round(aim.u * thetaMax(c, aim.d) * 2 * 180 / Math.PI);
   $('steerLbl').textContent = deg === 0 ? 'dritto' : `${Math.abs(deg)}° ${deg > 0 ? 'destra' : 'sinistra'}`;
   const st = $('status');
@@ -2802,7 +2803,7 @@ async function openLobbyList() {
   setTimeout(renderLobbyList, 2500);
 }
 function closeLobbyList() { try { LB.net && LB.net.close(); } catch (e) {} LB.net = null; LB.list = []; }
-const LVL = { facile: 'Facile', medio: 'Medio', pro: 'Pro' };
+const LVL = { facile: 'Facile', medio: 'Medio', pro: 'Pro', ultrapro: 'Ultra Pro' };
 function renderLobbyList() {
   if (!LB.net) return;
   const rooms = LB.list.filter(r => r && r.code && r.open && r.id !== myId).sort((a, b) => (a.n >= a.max) - (b.n >= b.max) || b.n - a.n);
@@ -3087,7 +3088,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.21.1';
+const GAME_VERSION = 'v0.22';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
@@ -3129,7 +3130,7 @@ async function sendOnlineTimes() {
   if (onlineSent || !OPT.online || !Portal.online) return; onlineSent = true;
   const rows = [];
   for (const c of cars.filter(c => c.human && c.name.trim() && (!MP.active || c.owner === myId))) {
-    const base = { player: c.name.trim().slice(0, 13), track: trackKey, car_class: raceClass, setup: c.preset, level: mode, version: GAME_VERSION };
+    const base = { player: c.name.trim().slice(0, 13), track: trackKey, car_class: raceClass, setup: c.preset, level: mode === 'ultrapro' ? 'pro' : mode, version: GAME_VERSION };
     if (c.best != null) rows.push({ ...base, kind: 'lap', laps: laps, time_ms: Math.round(c.best * 1000) });
     if (c.finished && c.finishTime != null) rows.push({ ...base, kind: 'race', laps: laps, time_ms: Math.round(c.finishTime * 1000) });
   }
@@ -3183,7 +3184,7 @@ renderer.setAnimationLoop(now => {
   for (const f of floaters) { f.g.position.y = f.y0 + Math.sin(now * 0.0005 + f.ph) * 3; f.g.position.x += f.vx * dt; f.g.rotation.y += dt * 0.05; }
   turnRing.visible = !['menu', 'over', 'anim', 'start', 'replay'].includes(phase);
   turnRing.scale.setScalar(1 + Math.sin(now * 0.006) * 0.08);
-  if ((mode === 'pro' || MP.active || QUALI.timed) && phase === 'aim' && !paused && cur() && ctrlOf(cur()) === 'local') {
+  if ((isPro() || MP.active || QUALI.timed) && phase === 'aim' && !paused && cur() && ctrlOf(cur()) === 'local') {
     const before = Math.ceil(turnLeft); turnLeft -= Math.min(rawDt, 0.5); if (Math.ceil(turnLeft) !== before && turnLeft <= 5 && turnLeft > 0) sfx.tick();
     $('timerLbl').textContent = Math.max(0, Math.ceil(turnLeft)); $('timerBar').style.width = `${clamp(turnLeft / turnMax(), 0, 1) * 100}%`;
     $('timerBar').style.background = turnLeft < 5 ? '#ff4757' : '#f4b400';
