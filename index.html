@@ -209,7 +209,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.23</div>
+    <div class="ver">Prototipo v0.24</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -350,6 +350,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { DICT, HELP, LANGS, LOCALE } from './lang/i18n.js';
 
 /* ================== DATI ================== */
 const W = 14, HALF = W / 2;
@@ -410,10 +411,12 @@ const SPONSORS = [['GOMME ROSSI', '#e63946', '#fff'], ['PIZZA TURBO', '#f4b400',
   ['BIRRA DEL BOX', '#2a9d4a', '#fff'], ['ZA srl', '#1d2430', '#f4b400'], ['FRENI LAMPO', '#ffffff', '#e63946'], ['GELATI PITLANE', '#ff7fb0', '#fff'], ['RADIO GIRO', '#8e44ad', '#fff']];
 
 /* ================== OPZIONI ================== */
-const OPT = { online: true, audio: true, replays: true, quality: 'alta', shadows: true, anim: 'normale', cpu: 'normale', autocam: true, camMode: 'turni', trails: true, labels: true, minimap: true };
+const OPT = { lang: null, music: true, online: true, audio: true, replays: true, quality: 'alta', shadows: true, anim: 'normale', cpu: 'normale', autocam: true, camMode: 'turni', trails: true, labels: true, minimap: true };
 try { Object.assign(OPT, JSON.parse(localStorage.getItem('cpc-opzioni') || '{}')); } catch (e) {}
 const OPT_DEF = [
+  { k: 'lang', label: 'Lingua', vals: [['it', 'Italiano'], ['en', 'English'], ['fr', 'Français'], ['de', 'Deutsch'], ['es', 'Español']] },
   { k: 'audio', label: 'Suoni', vals: [[true, 'Sì'], [false, 'No']] },
+  { k: 'music', label: 'Musica', vals: [[true, 'Sì'], [false, 'No']] },
   { k: 'replays', label: 'Replay automatici (highlight)', vals: [[true, 'Sì'], [false, 'No']] },
   { k: 'quality', label: 'Qualità grafica', vals: [['alta', 'Alta'], ['media', 'Media'], ['bassa', 'Bassa']] },
   { k: 'shadows', label: 'Ombre', vals: [[true, 'Sì'], [false, 'No']] },
@@ -427,6 +430,73 @@ const OPT_DEF = [
   { k: 'online', label: 'Invia i tempi alla classifica online', vals: [[true, 'Sì'], [false, 'No']] },
 ];
 const animF = () => ({ lenta: 1.5, normale: 1, veloce: 0.45 })[OPT.anim];
+
+/* ================== LINGUE ==================
+   Il gioco è scritto in italiano; ogni scritta che compare sullo schermo viene tradotta al volo con il dizionario
+   di lang/i18n.js (anche quelle che cambiano in gara). {} nelle chiavi = parte variabile (nome, numero, tempo). */
+const LI = { en: 0, fr: 1, de: 2, es: 3 };
+let LANG = LANGS[OPT.lang] ? OPT.lang : ((navigator.languages || [navigator.language || 'it']).map(l => String(l).slice(0, 2).toLowerCase()).find(l => LANGS[l]) || 'en');
+OPT.lang = LANG;
+const nrm = t => t.replace(/\s+/g, ' ').trim();
+const TR_EX = new Map(), TR_PAT = [], TR_MEMO = new Map();
+for (const [k, v] of Object.entries(DICT)) {
+  const key = nrm(k);
+  if (!key.includes('{}')) { TR_EX.set(key, v); continue; }
+  const re = new RegExp('^' + key.split('{}').map(p => p.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*(.*?)\\s*') + '$', 's');
+  TR_PAT.push({ len: key.length, re, v });
+}
+TR_PAT.sort((a, b) => b.len - a.len);
+function trCore(t, depth = 0) {
+  const li = LI[LANG], ex = TR_EX.get(t);
+  if (ex) return ex[li] ?? t;
+  if (depth < 3) for (const P of TR_PAT) {
+    const m = t.match(P.re); if (!m) continue;
+    const g = m.slice(1).map(x => x.trim() ? trCore(x.trim(), depth + 1) : '');
+    let i = 0;
+    return P.v[li].replace(/\{(\d*)\}/g, (_, n) => n === '' ? (g[i++] ?? '') : (g[+n] ?? '')).replace(/ {2,}/g, ' ').trim();
+  }
+  if (t.includes(', ')) { const parts = t.split(', '); if (parts.every(p => TR_EX.has(p))) return parts.map(p => trCore(p)).join(', '); }
+  return t;
+}
+function tr(str) {
+  if (LANG === 'it' || str == null) return str;
+  const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(String(str)), core = nrm(m[2]);
+  if (!core || !/\p{L}/u.test(core)) return str;
+  const key = LANG + '|' + core; let out = TR_MEMO.get(key);
+  if (out === undefined) { out = trCore(core); TR_MEMO.set(key, out); if (out === core && window.TRS_I18N_DEBUG) (window.__missing ||= new Set()).add(core); }
+  return out === core ? str : m[1] + out + m[3];
+}
+const NO_TR = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'CANVAS']);
+function trText(n) {
+  const p = n.parentNode; if (!p || NO_TR.has(p.nodeName) || (p.closest && p.closest('[translate=no]'))) return;
+  const cur = n.nodeValue, src = (n.__tr !== undefined && cur === n.__tr) ? n.__it : cur, out = tr(src);
+  if (out !== cur) { n.__it = src; n.__tr = out; n.nodeValue = out; }
+}
+function trAttr(el, a) {
+  const cur = el.getAttribute(a); if (cur == null) return;
+  const st = el.__tra || (el.__tra = {}), src = (st[a] && cur === st[a][1]) ? st[a][0] : cur, out = tr(src);
+  if (out !== cur) { st[a] = [src, out]; el.setAttribute(a, out); }
+}
+function trTree(root) {
+  if (root.nodeType === 3) return trText(root);
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) trText(n);
+  for (const el of [root, ...root.querySelectorAll('[placeholder],[title]')]) { if (el.hasAttribute && el.hasAttribute('placeholder')) trAttr(el, 'placeholder'); if (el.hasAttribute && el.hasAttribute('title')) trAttr(el, 'title'); }
+}
+let HELP_IT = null;
+function setLang(l) {
+  LANG = LANGS[l] ? l : 'it'; OPT.lang = LANG; document.documentElement.lang = LANG;
+  const rules = document.querySelector('#vHelp .rules');
+  if (rules) { if (HELP_IT === null) HELP_IT = rules.innerHTML; rules.innerHTML = LANG === 'it' ? HELP_IT : (HELP[LANG] || HELP_IT); }
+  trTree(document.body);
+}
+function startI18n() {
+  setLang(LANG);
+  new MutationObserver(ms => { for (const m of ms) {
+    if (m.type === 'characterData') trText(m.target);
+    else if (m.type === 'attributes') trAttr(m.target, m.attributeName);
+    else for (const n of m.addedNodes) if (n.nodeType === 3 || n.nodeType === 1) trTree(n);
+  } }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title'] });
+}
 
 /* ================== UTIL ================== */
 function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -467,6 +537,8 @@ function applyOptions() {
   sun.castShadow = OPT.shadows;
   for (const c of cars) { c.trailLine.visible = OPT.trails; c.label.visible = OPT.labels; }
   $('minimap').classList.toggle('hidden', !OPT.minimap);
+  if (SND.ctx) musicVol();
+  if (OPT.lang !== LANG) setLang(OPT.lang);
   updateCamBtn();
   if (SND.master) SND.master.gain.value = (OPT.audio && !adMuted) ? 0.55 : 0;
   try { localStorage.setItem('cpc-opzioni', JSON.stringify(OPT)); } catch (e) {}
@@ -1518,7 +1590,7 @@ function retire(c, why) {
   c.mesh.position.set(c.x, 0.05, c.z);
   c.mesh.traverse(o => { if (o.isMesh && o.material && !o.material.__fin) { o.material = o.material.clone(); o.material.__fin = true; o.material.transparent = true; o.material.opacity = 0.4; } });
   log(`⛔ <b style="color:${c.color}">${c.name}</b> si ritira: ${why}.`);
-  if (c.human && (!MP.active || c.owner === myId)) banner('RITIRATO', '#ff4757', why); else banner(`${c.name} SI RITIRA`, '#ff9aa4', why);
+  if (c.human && (!MP.active || c.owner === myId)) { banner('RITIRATO', '#ff4757', why); sfx.retire(); } else banner(`${c.name} SI RITIRA`, '#ff9aa4', why);
   sfx.crash();
 }
 function pitSpot(c) {
@@ -1535,6 +1607,7 @@ function enterPit(c) {
   c.mesh.position.set(c.x, 0.05, c.z); c.mesh.rotation.set(0, -c.a, 0);
   log(`🔧 <b style="color:${c.color}">${c.name}</b> rientra ai box: ${c.pitWork} (${c.pitTurns} turni).`);
   if (c.human) banner('BOX, BOX!', '#f4c430', c.pitWork);
+  sfx.wrench();
 }
 function exitPit(c) {
   c.tyre = 0; c.fuel = 100; c.dmg = 0; c.inPit = false; updatePerf(c);
@@ -1741,7 +1814,7 @@ function beginTurn() {
   // nessuna mossa suggerita, a nessun livello: il bersaglio parte dritto alla velocità attuale
   makeGhost(c.color); buildZone(c);
   aimGroup.visible = true;
-  if (ctl === 'local') { phase = 'aim'; goBtn.disabled = false; turnLeft = turnMax(); updateAim(); if (!MP.active) saveGame(); }
+  if (ctl === 'local') { phase = 'aim'; goBtn.disabled = false; turnLeft = turnMax(); updateAim(); if (humansIn().length > 1 || MP.active) sfx.myTurn(); if (!MP.active) saveGame(); }
   else if (ctl === 'cpu') { phase = 'cpu'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); if (MP.active && c.human && c.netGone) later(() => { if (cur() === c && phase === 'cpu') netSendMove(c, 0, 0, false, true); }, 450); else later(() => cpuPlay(c), 450); }
   else { phase = 'remote'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); netAwait(c); }
   if (MP.active) netTryInbox();
@@ -1773,7 +1846,7 @@ function applyResult(c, r) {
   if (r.status === 'off') { c.skip = 1; log(`${tag} esce di pista: testacoda! Riparte da fermo e salta un turno.`); }
   if (c.finished) c.mesh.traverse(o => { if (o.isMesh && o.material && !o.material.__fin) { o.material = o.material.clone(); o.material.__fin = true; o.material.transparent = true; o.material.opacity = 0.45; } });
   applyWear(c, r, prevV, Math.abs(r.u || 0));
-  if (r.status === 'off') { showFlag(c.idx, 'gialla'); spawnDust(c.x, c.z); sfx.skid(1.3); addEvent(c, 4, `testacoda di ${c.name}`); addDamage(c, 3 + prevV * 0.12, 'uscita di pista violenta'); }
+  if (r.status === 'off') { showFlag(c.idx, 'gialla'); spawnDust(c.x, c.z); sfx.skid(1.3); sfx.gravel(); if (c.human) sfx.whistle(); addEvent(c, 4, `testacoda di ${c.name}`); addDamage(c, 3 + prevV * 0.12, 'uscita di pista violenta'); }
   else if (r.status === 'hit') {
     showFlag(c.idx, 'gialla'); sfx.crash(); addEvent(c, 4, `contatto di ${c.name}`, c.human || !!(r.victim && r.victim.ref && r.victim.ref.human));
     addDamage(c, 6 + (r.d || r.speed) * 0.18, 'danni da incidente'); if (r.victim && r.victim.ref) addDamage(r.victim.ref, 4 + (r.d || r.speed) * 0.1, 'danni da incidente');
@@ -1801,7 +1874,7 @@ function applyResult(c, r) {
       const fast = cars.every(o => o === c || o.best == null || lt <= o.best);
       if (c.human) sfx.lap();
       if (L === laps - 1 && !lastLapShown && positions()[0] === c) { lastLapShown = true; banner('ULTIMO GIRO', '#f4c430', `in testa ${c.name}`); sfx.cheer(0.8); }
-      if (L === laps && !c.finished && finishCount === 0) { banner(`VINCE ${c.name.toUpperCase()}!`, c.color, '🏁 bandiera a scacchi'); sfx.cheer(1.6); cheerT = performance.now() + 4000; addEvent(c, 6, `vittoria di ${c.name}`); }
+      if (L === laps && !c.finished && finishCount === 0) { banner(`VINCE ${c.name.toUpperCase()}!`, c.color, '🏁 bandiera a scacchi'); sfx.cheer(1.6); sfx.fanfare(); sfx.clap(1.5); cheerT = performance.now() + 4000; addEvent(c, 6, `vittoria di ${c.name}`); }
       if (L === laps && !c.finished) { c.finished = true; c.finishTime = tCross; c.finishPos = ++finishCount; log(`🏁 ${tag} taglia il traguardo! Tempo totale ${fmtTime(tCross)} · ultimo giro ${fmtTime(lt)}${fast ? ' 🟣 giro più veloce' : ''}`); }
       else log(`${tag} giro ${L} in <b>${fmtTime(lt)}</b>${fast ? ' 🟣 giro più veloce' : pb ? ' (personale)' : ''}`);
     }
@@ -1835,7 +1908,7 @@ function checkGameOver() {
   phase = 'over'; aimGroup.visible = false;
   const ranked = positions();
   const lead = ranked[0], fastest = Math.min(...cars.map(c => c.best ?? Infinity));
-  $('endSub').textContent = `${TRACKS[trackKey].name} · ${laps} ${laps > 1 ? 'giri' : 'giro'} · livello ${mode}`;
+  $('endSub').textContent = `${TRACKS[trackKey].name} · ${laps} ${laps > 1 ? 'giri' : 'giro'} · livello ${LVL[mode] || mode}`;
   $('endList').innerHTML = ranked.map((c, i) => `<div class="res"><span class="p">${i + 1}°</span><span class="dot" style="background:${c.color}"></span><span style="flex:1">${c.name} <small style="color:#9fb0cc">· ${c.preset}${c.human ? '' : ' · CPU'}</small><br><small style="color:#9fb0cc">miglior giro ${fmtTime(c.best)}${c.best === fastest ? ' 🟣' : ''}</small></span><span style="font-size:14px;text-align:right">${c.out ? '<span style="color:#ff9aa4">ritirato</span>' : c.finished ? (c === lead ? fmtTime(c.finishTime) : '+' + (c.finishTime - lead.finishTime).toFixed(2) + ' s') : '<span style="color:#9fb0cc">giro ' + Math.min(laps, Math.floor(c.progress / N) + 1) + '</span>'}</span></div>`).join('');
   $('endScreen').classList.remove('hidden'); $('againBtn').textContent = MP.net ? 'Torna alla stanza' : 'Rivincita';
   if (!MP.active) clearSave();   // gara finita: niente più da riprendere
@@ -1952,7 +2025,7 @@ function spawnSparks(x, z) {
     fx.push({ m, v: new THREE.Vector3((Math.random() - 0.5) * 14, 4 + Math.random() * 8, (Math.random() - 0.5) * 14), life: 0.7, t: 0, g: 22 });
   }
   const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const c = cv.getContext('2d');
-  c.font = '900 44px sans-serif'; c.textAlign = 'center'; c.lineWidth = 8; c.strokeStyle = '#1d2430'; c.strokeText('CONTATTO!', 128, 46); c.fillStyle = '#ffc93c'; c.fillText('CONTATTO!', 128, 46);
+  const ct = tr('CONTATTO!'); c.font = '900 44px sans-serif'; if (c.measureText(ct).width > 236) c.font = `900 ${Math.floor(44 * 236 / c.measureText(ct).width)}px sans-serif`; c.textAlign = 'center'; c.lineWidth = 8; c.strokeStyle = '#1d2430'; c.strokeText(ct, 128, 46); c.fillStyle = '#ffc93c'; c.fillText(ct, 128, 46);
   const t = new THREE.CanvasTexture(cv); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true }));
   sp.scale.set(10, 2.5, 1); sp.position.set(x, 5, z); sp.renderOrder = 12; scene.add(sp);
   fx.push({ m: sp, v: new THREE.Vector3(0, 3, 0), life: 1.4, t: 0, g: 0, label: true });
@@ -1983,7 +2056,7 @@ function stepFx(dt) {
 }
 
 /* ================== AUDIO (sintetizzato, nessun file esterno) ================== */
-const SND = { ctx: null, master: null, noise: null, eng: null, crowd: null };
+const SND = { ctx: null, master: null, noise: null, eng: null, crowd: null, music: null };
 function audioInit() {
   if (SND.ctx || !OPT.audio) return;
   try {
@@ -1996,11 +2069,18 @@ function audioInit() {
     o1.type = 'sawtooth'; o2.type = 'square'; o2.detune.value = 14; lp.type = 'lowpass'; lp.frequency.value = 700; g.gain.value = 0;
     o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(SND.master); o1.start(); o2.start();
     SND.eng = { o1, o2, lp, g };
-    const n = ctx.createBufferSource(); n.buffer = buf; n.loop = true;
-    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1000; bp.Q.value = 0.5;
-    const cg = ctx.createGain(); cg.gain.value = 0;
-    n.connect(bp); bp.connect(cg); cg.connect(SND.master); n.start();
+    // folla: brusio basso + chiacchiericcio più acuto, che "respirano" con oscillazioni lente
+    const cg = ctx.createGain(); cg.gain.value = 0; cg.connect(SND.master);
+    for (const [f, q, lv, lf] of [[420, 0.8, 1, 0.23], [1250, 1.4, 0.7, 0.41], [2600, 2.2, 0.25, 0.67]]) {
+      const n = ctx.createBufferSource(); n.buffer = buf; n.loop = true;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q;
+      const g = ctx.createGain(); g.gain.value = lv * 0.7;
+      const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = lf; lg.gain.value = lv * 0.3; lfo.connect(lg); lg.connect(g.gain); lfo.start();
+      n.connect(bp); bp.connect(g); g.connect(cg); n.start(0, Math.random() * 1.5);
+    }
     SND.crowd = cg;
+    SND.music = ctx.createGain(); SND.music.gain.value = 0; SND.music.connect(SND.master);
+    musicStart();
   } catch (e) { SND.ctx = null; }
 }
 const sndOk = () => !!SND.ctx && OPT.audio;
@@ -2027,7 +2107,71 @@ const sfx = {
   lap: () => { tone(660, 0.12, 'triangle', 0.15); setTimeout(() => tone(990, 0.22, 'triangle', 0.15), 120); },
   pop: () => { noiseBurst({ dur: 0.12, f: 700, q: 0.8, type: 'lowpass', gain: 0.55 }); tone(75, 0.09, 'square', 0.12, 40); },
   jets: () => noiseBurst({ dur: 6, f: 250, f2: 1500, q: 0.6, type: 'lowpass', gain: 0.32 }),
+  // nuovi effetti
+  gravel: () => noiseBurst({ dur: 0.9, f: 380, q: 0.6, type: 'lowpass', gain: 0.35 }),
+  whoosh: () => noiseBurst({ dur: 0.55, f: 400, f2: 3200, q: 1.2, gain: 0.18 }),
+  myTurn: () => { tone(880, 0.12, 'sine', 0.08); setTimeout(() => tone(1320, 0.18, 'sine', 0.07), 110); },
+  wrench: () => { for (let i = 0; i < 3; i++) setTimeout(() => { tone(210, 0.16, 'sawtooth', 0.05, 260); noiseBurst({ dur: 0.16, f: 3000, q: 3, gain: 0.05 }); }, i * 230); },
+  fanfare: () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, i === 3 ? 0.6 : 0.16, 'triangle', 0.16), i * 140)),
+  retire: () => { tone(330, 0.3, 'triangle', 0.13, 220); setTimeout(() => tone(220, 0.5, 'triangle', 0.13, 110), 260); },
+  whistle: () => tone(2400, 0.35, 'sine', 0.05, 2900),
+  clap: (k = 1) => { for (let i = 0; i < 22 * k; i++) setTimeout(() => noiseBurst({ dur: 0.05, f: 1400 + Math.random() * 900, q: 1.5, gain: 0.06 }), Math.random() * 1600); },
 };
+
+/* ================== MUSICA (generata dal gioco, niente file) ==================
+   Due atmosfere: "menu" rilassata e "gara" più spinta. Batteria, basso, accordi e arpeggio sintetizzati;
+   ogni 8 battute cambia giro di accordi e ogni 16 la melodia, così non stanca. */
+const MUS = { mood: 'menu', want: 'menu', step: 0, bar: 0, next: 0, timer: null, rng: mulberry32(7), mel: [] };
+const MOODS = {
+  menu: { bpm: 92, vol: 0.2, prog: [[[48, 52, 55, 59], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 55]], [[41, 45, 48, 52], [43, 47, 50, 53], [40, 43, 47, 52], [45, 48, 52, 55]]],
+          kick: [0, 10], snare: [8], hat: [2, 6, 10, 14], bass: [0, 10], arp: 4 },
+  race: { bpm: 126, vol: 0.13, prog: [[[45, 48, 52, 57], [41, 45, 48, 53], [48, 52, 55, 60], [43, 47, 50, 55]], [[41, 45, 48, 53], [43, 47, 50, 55], [40, 43, 47, 52], [45, 48, 52, 57]]],
+          kick: [0, 4, 8, 12], snare: [4, 12], hat: [2, 6, 10, 14], bass: [0, 2, 4, 6, 8, 10, 12, 14], arp: 2 },
+};
+const mf = n => 440 * 2 ** ((n - 69) / 12);
+function mVoice(type, f, t, dur, gain, cut = 2400, f2 = null) {
+  const ctx = SND.ctx, o = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  lp.type = 'lowpass'; lp.frequency.value = cut;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + Math.min(0.02, dur / 3)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(lp); lp.connect(g); g.connect(SND.music); o.start(t); o.stop(t + dur + 0.05);
+}
+function mNoise(t, dur, f, type, gain, q = 1) {
+  const ctx = SND.ctx, n = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+  n.buffer = SND.noise; fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+  g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  n.connect(fl); fl.connect(g); g.connect(SND.music); n.start(t, Math.random()); n.stop(t + dur + 0.02);
+}
+function newMelody() {   // melodia nuova: note della pentatonica, con pause
+  const sc = [0, 3, 5, 7, 10, 12, 15];
+  MUS.mel = Array.from({ length: 16 }, (_, i) => (MUS.rng() < (i % 4 === 0 ? 0.75 : 0.35)) ? sc[Math.floor(MUS.rng() * sc.length)] : null);
+}
+function musicStep(t) {
+  const M = MOODS[MUS.mood], st = MUS.step % 16, bar = MUS.bar, sec = Math.floor(bar / 8) % 2, ch = M.prog[sec][bar % 4], dur16 = 60 / M.bpm / 4;
+  if (st === 0 && bar % 16 === 0) newMelody();
+  const fill = bar % 8 === 7 && st >= 12;
+  if (M.kick.includes(st)) mVoice('sine', 150, t, 0.22, 0.9, 800, 42);
+  if (M.snare.includes(st) || (fill && MUS.mood === 'race')) { mNoise(t, 0.16, 1900, 'bandpass', fill ? 0.25 : 0.4, 0.8); mVoice('triangle', 190, t, 0.08, 0.2, 1200); }
+  if (M.hat.includes(st) || (MUS.mood === 'race' && st % 2 === 1 && MUS.rng() < 0.25)) mNoise(t, 0.04, 8000, 'highpass', 0.12);
+  if (M.bass.includes(st)) mVoice(MUS.mood === 'race' ? 'sawtooth' : 'triangle', mf(ch[0] - 12 + (MUS.mood === 'race' && st % 4 === 2 ? 12 : 0)), t, dur16 * (MUS.mood === 'race' ? 1.6 : 5), 0.32, MUS.mood === 'race' ? 700 : 500);
+  if (st === 0) for (const n of ch.slice(1)) mVoice('sawtooth', mf(n + 12), t, dur16 * 15, 0.035, 1100);   // accordo lungo
+  if (st % M.arp === 0) mVoice('square', mf(ch[(st / M.arp) % ch.length] + 24), t, dur16 * 0.9, 0.035, 2600);   // arpeggio
+  const m = MUS.mel[st]; if (m !== null && bar % 4 !== 3 && (MUS.mood === 'race' || st % 2 === 0)) mVoice('triangle', mf(57 + 12 + m), t, dur16 * (MUS.mood === 'race' ? 1.8 : 3.5), 0.07, 3000);
+}
+function musicTick() {
+  if (!SND.ctx || SND.ctx.state !== 'running') return;
+  const now = SND.ctx.currentTime, d16 = () => 60 / MOODS[MUS.mood].bpm / 4;
+  // se la pagina si è bloccata (fotogramma lento, CPU che pensa) si salta in avanti tenendo il ritmo, senza accavallare note
+  while (MUS.next < now - 0.02) { MUS.next += d16(); MUS.step++; if (MUS.step % 16 === 0) MUS.bar++; }
+  while (MUS.next < now + 0.4) {
+    if (MUS.step % 16 === 0 && MUS.want !== MUS.mood) { MUS.mood = MUS.want; MUS.bar = 0; musicVol(); }   // si cambia atmosfera a inizio battuta
+    musicStep(MUS.next);
+    MUS.next += 60 / MOODS[MUS.mood].bpm / 4; MUS.step++; if (MUS.step % 16 === 0) MUS.bar++;
+  }
+}
+function musicVol() { if (SND.music) SND.music.gain.setTargetAtTime(OPT.music ? MOODS[MUS.mood].vol : 0, SND.ctx.currentTime, 0.4); }
+function musicStart() { if (MUS.timer) return; newMelody(); musicVol(); MUS.timer = setInterval(musicTick, 30); }
+function musicMood(m) { MUS.want = m; }
 addEventListener('pointerdown', () => audioInit());
 addEventListener('keydown', () => audioInit());
 document.addEventListener('click', e => { if (e.target.closest && e.target.closest('button')) sfx.click(); });
@@ -2081,7 +2225,7 @@ function checkOvertakes(c, tag) {
       const big = c.human || passed.some(o => o.human) || pNow < 3;
       addEvent(c, big ? 5 : 3, `sorpasso di ${c.name}`, c.human || passed.some(o => o.human));
       if (roundRec) (roundRec.ovt = roundRec.ovt || []).push({ ci: cars.indexOf(c), txt: `${c.name} → ${pNow + 1}° posto`, color: c.color });
-      if (big) { banner('SORPASSO!', c.color, `${c.name} → ${pNow + 1}° posto`); sfx.cheer(1); cheerT = performance.now() + 2500; }
+      if (big) { banner('SORPASSO!', c.color, `${c.name} → ${pNow + 1}° posto`); sfx.cheer(1); sfx.whoosh(); cheerT = performance.now() + 2500; }
     }
   }
   lastOrder = now;
@@ -2240,8 +2384,9 @@ function stepCrowd(now) {
     C.mesh.instanceMatrix.needsUpdate = true;
   }
   crowdExc = maxE;
-  if (phase !== 'menu') crowdLevel(0.025 + Math.min(1, crowdExc) * 0.04 + (boost ? 0.05 : 0));
+  if (phase !== 'menu') crowdLevel(0.03 + Math.min(1, crowdExc) * 0.05 + (boost ? 0.07 : 0));
   else crowdLevel(0);
+  musicMood(phase === 'menu' || !$('endScreen').classList.contains('hidden') ? 'menu' : 'race');
 }
 
 /* ================== SEGNI SULL'ASFALTO, FUMO GOMME, SCOPPIETTATE ================== */
@@ -2413,7 +2558,7 @@ function updateHUD() {
   if (phase === 'wait') { st.className = 'bad'; st.textContent = 'In testacoda: salta il turno'; return; }
   if (c.thinking) { st.className = 'neutral'; st.textContent = c.human && c.netGone ? `${c.name} si è disconnesso` : c.human ? `In attesa di ${c.name}…` : 'CPU sta pensando…'; return; }
   if (!preview) return;
-  if (hideOff(c) && (preview.status !== 'hit' || hideHit(c))) { st.className = 'neutral'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : `Traiettoria impostata · livello ${mode}`; }
+  if (hideOff(c) && (preview.status !== 'hit' || hideHit(c))) { st.className = 'neutral'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : `Traiettoria impostata · livello ${LVL[mode] || mode}`; }
   else if (preview.status === 'ok' && preview.trap) { st.className = 'warn'; st.textContent = 'Attenzione: troppo veloce, al prossimo turno non potrai evitare l\'uscita. Frena prima!'; }
   else if (preview.status === 'ok') { st.className = 'ok'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : aimSuggested ? 'Traiettoria pulita · mossa suggerita' : 'Traiettoria pulita'; }
   else if (preview.status === 'hit') { st.className = 'warn'; st.textContent = `Contatto: ti fermi dietro e scendi a ${kmh(preview.speed)} km/h`; }
@@ -2484,7 +2629,7 @@ function renderOptions() {
   $('optList').innerHTML = '';
   for (const d of OPT_DEF) {
     const row = document.createElement('div'); row.className = 'opt';
-    row.innerHTML = `<span>${d.label}</span><div class="seg">${d.vals.map(([v, l]) => `<button class="${OPT[d.k] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    row.innerHTML = `<span>${d.label}</span><div class="seg"${d.k === 'lang' ? ' translate="no"' : ''}>${d.vals.map(([v, l]) => `<button class="${OPT[d.k] === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
     row.querySelectorAll('.seg button').forEach((b, i) => b.onclick = () => { OPT[d.k] = d.vals[i][0]; applyOptions(); renderOptions(); });
     $('optList').append(row);
   }
@@ -2937,7 +3082,7 @@ function loadSave() { try { const d = JSON.parse(localStorage.getItem(SAVE_KEY) 
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} snap = null; updateResumeBtn(); }
 function updateResumeBtn() {
   const d = loadSave(), b = $('resumeSaved'); b.classList.toggle('hidden', !d);
-  if (d) { const t = new Date(d.at); $('resumeInfo').textContent = `${TRACKS[d.cfg.track].name} · round ${d.round} · ${t.toLocaleDateString('it-IT')} ${t.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`; }
+  if (d) { const t = new Date(d.at); $('resumeInfo').textContent = `${TRACKS[d.cfg.track].name} · round ${d.round} · ${t.toLocaleDateString(LOCALE[LANG])} ${t.toLocaleTimeString(LOCALE[LANG], { hour: '2-digit', minute: '2-digit' })}`; }
 }
 function resumeFrom(d) {
   d.cars.forEach((st, i) => {
@@ -3092,7 +3237,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.23';
+const GAME_VERSION = 'v0.24';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
@@ -3122,7 +3267,7 @@ async function loadLeaderboard() {
   try {
     const rows = await fetchBoard(track, cls, kind, nl);
     if (!rows.length) { box.innerHTML = '<p class="sub">Ancora nessun tempo qui. Il primo potrebbe essere il tuo!</p>'; return; }
-    box.innerHTML = rows.map((r, i) => `<div class="res"><span class="p">${i + 1}°</span><span style="flex:1">${esc(r.player)} <small style="color:#9fb0cc">· ${esc(r.setup)} · ${LEVEL_LBL[r.level] || esc(r.level)}</small><br><small style="color:#9fb0cc">${new Date(r.created_at).toLocaleDateString('it-IT')}</small></span><b>${fmtTime(r.time_ms / 1000)}</b></div>`).join('');
+    box.innerHTML = rows.map((r, i) => `<div class="res"><span class="p">${i + 1}°</span><span style="flex:1">${esc(r.player)} <small style="color:#9fb0cc">· ${esc(r.setup)} · ${LEVEL_LBL[r.level] || esc(r.level)}</small><br><small style="color:#9fb0cc">${new Date(r.created_at).toLocaleDateString(LOCALE[LANG])}</small></span><b>${fmtTime(r.time_ms / 1000)}</b></div>`).join('');
   } catch (e) {
     box.innerHTML = '<p class="sub">Classifica non raggiungibile da qui. Funziona sul sito del gioco, con la connessione attiva.</p>';
   }
@@ -3200,6 +3345,7 @@ renderer.setAnimationLoop(now => {
   drawMinimap();
   renderer.render(scene, camera);
 });
+startI18n();   // traduce l'interfaccia e resta in ascolto delle scritte nuove
 </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.23** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase) e `fonts/` (Rubik): tutto incluso, nessun build, audio sintetizzato.
+Versione attuale: **v0.24** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -115,6 +115,16 @@ Due voci separate nel menu principale (v0.21):
 - **Adattatore `const Portal`** nel codice: `init`, `loadingFinished`, `gameplayStart`/`gameplayStop`, `commercialBreak` (pubblicità prima di ogni gara dopo la prima), `playerName`, `online`. Sul sito sono vuote; il portale si sceglie con `?portal=nome` o `window.TRS_PORTAL`.
 - Audio muto e gara in pausa con la scheda nascosta e durante le pubblicità (online solo audio muto); frecce e spazio non scorrono la pagina; niente menu del tasto destro sul gioco.
 
+## Audio (v0.24)
+- **Musica** generata dal gioco con Web Audio, niente file: batteria, basso, accordi, arpeggio e melodia. Due atmosfere: **menu** (92 bpm, rilassata) e **gara** (126 bpm, più spinta e più bassa di volume per sentire motori e folla). Cambia giro di accordi ogni 8 battute e melodia ogni 16; il passaggio menu ↔ gara avviene a inizio battuta. Lo scheduler anticipa di 0,4 s e, se la pagina si blocca, salta avanti tenendo il ritmo. Opzione **Musica** Sì/No.
+- **Folla:** brusio a tre bande con oscillazioni lente, più forte con l'eccitazione della gara (sorpassi, arrivo).
+- **Effetti:** motore, sgommate, contatti, scoppiettate, semaforo, giro, Frecce Tricolori, più (v0.24) ghiaia nelle uscite, fischio del commissario quando esce un umano, chiave pneumatica ai box, "whoosh" sui sorpassi, fanfara e applausi alla vittoria, suono del ritiro, avviso "tocca a te" in hot-seat e online.
+
+## Lingue (v0.24)
+- Italiano, inglese, francese, tedesco, spagnolo: **Opzioni → Lingua**; al primo avvio si sceglie quella del browser (inglese se non è tra le cinque).
+- Il gioco resta scritto in italiano: un traduttore interno guarda ogni scritta che compare sullo schermo (menu, HUD, registro di gara, stanze, classifica) e la sostituisce con il dizionario `lang/i18n.js` (chiave = testo italiano, `{}` = parte variabile). La pagina "Come si gioca" ha il testo intero per lingua. Per aggiungere una scritta nuova basta aggiungere la riga al dizionario; con `window.TRS_I18N_DEBUG = true` il gioco raccoglie in `window.__missing` le scritte senza traduzione.
+- Restano in italiano i nomi propri: piloti CPU, sponsor sui cartelloni, "Mini Monza".
+
 ## Interfaccia
 - Layout compatto fino a 900 px di larghezza; il testo d'aiuto della barra comandi sparisce sotto i 1100 px.
 - Il registro delle azioni non intercetta i clic e, sotto i 1300 px, sta sopra la barra dei comandi.
@@ -131,6 +141,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.24:** musica, folla e nuovi effetti sonori; 5 lingue.
 - **v0.23:** solo Mini Monza in tutte le modalità (altre piste con il lucchetto); Ultra Pro verificato online.
 - **v0.22.1:** la scia colorata delle auto resta per tutta la gara, su tutti i giri (prima si cancellava dopo circa 10 mosse); si può spegnere in Opzioni → Scie delle auto.
 - **v0.22:** livello Ultra Pro con 5 secondi a mossa.
@@ -145,6 +156,8 @@ Due voci separate nel menu principale (v0.21):
 - Durata reale del serbatoio (6 o 6,5 giri) e significato del "+27%" della Formula 1.
 - I 15 secondi per turno online dal telefono.
 - Le bandiere: se sono abbastanza visibili dalla vista di gara.
+- La musica: volume rispetto a motori e folla, e se stanca dopo molte gare.
+- Le traduzioni: qualche frase del registro di gara può suonare meno naturale, perché alcune frasi sono tradotte a pezzi.
 
 ## Prossimi passi concordati
 1. Rifiniture del multiplayer dopo altre prove (per esempio invito con link, messaggi rapidi, host che passa a un altro giocatore se esce).
