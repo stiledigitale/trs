@@ -105,6 +105,36 @@
   .tagh{font-size:11px;font-weight:800;background:#e63946;color:#fff;border-radius:6px;padding:2px 6px;margin-left:6px}
   .hidden{display:none!important}
   @media (max-width:1100px){#hint{display:none}}
+  /* telefono (verticale o orizzontale): pannelli di gioco compatti; toccando il pannello del pilota si vedono tutti i dati */
+  @media (max-width:760px), (max-height:520px){
+    .panel{padding:7px 9px;border-radius:10px}
+    #hud{top:6px;left:6px;width:auto;min-width:150px;max-width:48vw;font-size:11.5px;line-height:1.35}
+    #hud h3{display:none}
+    #hud .who{font-size:13px;margin-bottom:2px}
+    #hud:not(.full) .extra{display:none!important}
+    #hud::after{content:'▾ dati';display:block;font-size:10px;color:#9fb0cc;margin-top:3px}
+    #hud.full::after{content:'▴ meno'}
+    #status{margin-top:4px;padding:4px 6px;font-size:11px}
+    #rank{top:6px;right:6px;width:40vw;max-width:190px;font-size:11px}
+    #rank h3{display:none}
+    #rank .r{padding:2px 4px;gap:5px}
+    #rank .r .l{font-size:10px}
+    #minimap{display:none}
+    #controls{bottom:8px;gap:6px;padding:6px}
+    #controls button{padding:9px 11px;font-size:15px}
+    #goBtn{padding:10px 16px}
+    .lbl{display:none}
+    #log{display:none}
+    #banner{font-size:26px;top:22%}
+    #banner small{font-size:13px}
+    #lights{top:18%;padding:8px 12px}
+    .lt{width:24px;height:24px}
+    #lightsTxt{font-size:14px}
+    .mprow{grid-template-columns:1fr}
+    .card{padding:16px 16px}
+    .card h2{font-size:22px}
+    #replayFull button{padding:7px 9px;font-size:12px}
+  }
   @media (max-width:900px){#log{display:none}#rank{width:170px}#minimap{width:142px;height:106px}#hud{width:220px;font-size:12.5px}#hint{display:none}.prow{grid-template-columns:22px 16px 1fr 84px 96px}}
 </style>
 <script type="importmap">
@@ -119,12 +149,12 @@
   <div class="who"><span class="dot" id="whoDot"></span><span id="whoName">—</span></div>
   <div class="row"><span>Giro</span><b id="lapLbl">1/2</b></div>
   <div class="row"><span>Velocità</span><b id="spdLbl">0 → 0</b></div>
-  <div class="row"><span>Possibile questo turno</span><b id="rngLbl">0–0</b></div>
-  <div class="row"><span>Marcia</span><b id="gearLbl">1ª</b></div>
-  <div class="row"><span>Sterzo</span><b id="steerLbl">0°</b></div>
-  <div class="row"><span>Tempo giro</span><b id="lapTimeLbl">0:00.00</b></div>
-  <div class="row"><span>Miglior giro</span><b id="bestLbl">—</b></div>
-  <div id="wearBox">
+  <div class="row extra"><span>Possibile questo turno</span><b id="rngLbl">0–0</b></div>
+  <div class="row extra"><span>Marcia</span><b id="gearLbl">1ª</b></div>
+  <div class="row extra"><span>Sterzo</span><b id="steerLbl">0°</b></div>
+  <div class="row extra"><span>Tempo giro</span><b id="lapTimeLbl">0:00.00</b></div>
+  <div class="row extra"><span>Miglior giro</span><b id="bestLbl">—</b></div>
+  <div id="wearBox" class="extra">
     <div class="row"><span>Gomme</span><b><span class="bar"><i id="tyreBar"></i></span><span id="tyreLbl"></span></b></div>
     <div class="row"><span>Carburante</span><b><span class="bar"><i id="fuelBar"></i></span><span id="fuelLbl"></span></b></div>
     <div class="row"><span>Danni</span><b><span class="bar"><i id="dmgBar"></i></span><span id="dmgLbl"></span></b></div>
@@ -137,10 +167,10 @@
 
 <div id="controls" class="panel hidden">
   <button id="pauseBtn" title="Esc">☰</button>
-  <button id="boxBtn" title="B">📥 Box</button>
+  <button id="boxBtn" title="B">📥<span class="lbl"> Box</span></button>
   <button id="camModeBtn" title="V">🎥 Segui i turni</button>
-  <button id="camBtn" title="C">Centra camera</button>
-  <button id="goBtn" class="primary" title="Invio">Conferma mossa</button>
+  <button id="camBtn" title="C">🎯<span class="lbl"> Centra camera</span></button>
+  <button id="goBtn" class="primary" title="Invio">Conferma<span class="lbl"> mossa</span></button>
   <div id="hint">Trascina il bersaglio nell'area colorata. W/S velocità, A/D sterzo, V cambia camera.</div>
 </div>
 
@@ -164,7 +194,7 @@
     <button class="big" data-go="vOnline">Multiplayer online <small>con gli amici</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.17</div>
+    <div class="ver">Prototipo v0.18</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -201,12 +231,12 @@
     <div id="lbPlayers"></div>
     <h4>Gara</h4>
     <div class="foot" style="justify-content:flex-start;margin-top:0">
-      <label>Pista <select id="lbTrack"><option value="monza">Mini Monza</option><option value="prova">Anello di prova</option><option value="dolomiti">Valle delle Dolomiti</option></select></label>
+      <label>Pista <select id="lbTrack"><option value="monza">Mini Monza</option><option value="prova" disabled>🔒 Anello di prova · presto</option><option value="dolomiti" disabled>🔒 Valle delle Dolomiti · presto</option></select></label>
       <label>Classe <select id="lbClass"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label>
       <label>Giri <select id="lbLaps"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></label>
       <label>Livello <select id="lbMode"><option value="facile">Facile</option><option value="medio">Medio</option><option value="pro">Pro</option></select></label>
       <label>Usura <select id="lbWear"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label>
-      <label>Auto CPU <select id="lbCpu"><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
+      <label>Auto CPU <select id="lbCpu"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
     </div>
     <p class="sub" id="lbNote" style="margin-top:10px"></p>
     <div class="foot"><button id="lbLeave">← Esci dalla stanza</button><div class="r"><label>Il tuo assetto <select id="lbSetup"></select></label><button id="lbReady">Sono pronto</button><button class="primary" id="lbStart">Via!</button></div></div>
@@ -1207,8 +1237,13 @@ const _v = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vect
 function stepJets(dt) {
   const J = jetSys; J.t += dt;
   const P = J.pass, flying = J.t >= 0 && J.t <= P.len, pre = phase === 'menu' || phase === 'start';
-  J.climb = pre ? 0 : (J.climb || 0) + dt * 40;   // a gara iniziata le frecce cabrano e se ne vanno
-  J.g.visible = flying && J.climb < 400;
+  if (!pre) {   // al VIA! le Frecce e le loro scie spariscono: non devono coprire la visuale di gara
+    if (!J.gone) { J.gone = true; J.g.visible = false; J.data.fill(null); _m.makeScale(0, 0, 0); for (let i = 0; i < J.POOL; i++) J.puffs.setMatrixAt(i, _m); J.puffs.instanceMatrix.needsUpdate = true; }
+    return;
+  }
+  if (J.gone) { J.gone = false; newPass(); }
+  J.climb = 0;
+  J.g.visible = flying;
   if (J.t > P.len + 10 && phase === 'menu') newPass();
   if (flying) {
     J.g.position.copy(P.start).addScaledVector(P.dir, J.t * 48);
@@ -2188,7 +2223,7 @@ const humansIn = () => cars.filter(c => c.human && (!MP.active || c.owner === my
 // "turni": la camera segue chi muove; "mia": solo le auto dei giocatori umani (se non ce ne sono, segue i turni)
 const camWatch = c => OPT.camMode !== 'mia' || humansIn().includes(c) || !humansIn().length;
 function myCar() { const h = humansIn(); if (!h.length) return cur(); const c = cur(); return c && c.human ? c : (h.find(x => !x.finished) || h[0]); }
-function updateCamBtn() { const b = $('camModeBtn'); if (b) b.textContent = OPT.camMode === 'mia' ? '🎥 La mia auto' : '🎥 Segui i turni'; }
+function updateCamBtn() { const b = $('camModeBtn'); if (b) b.innerHTML = '🎥<span class="lbl"> ' + (OPT.camMode === 'mia' ? 'La mia auto' : 'Segui i turni') + '</span>'; }
 function focusCamera(c) {
   const dx = Math.cos(c.a), dz = Math.sin(c.a);
   const tgt = new THREE.Vector3(c.x + dx * 20, 0, c.z + dz * 20);
@@ -2293,7 +2328,7 @@ function updateHUD() {
     $('tyreBar').style.width = tl + '%'; $('tyreBar').style.background = col(tl); $('tyreLbl').textContent = Math.round(tl) + '%';
     $('fuelBar').style.width = c.fuel + '%'; $('fuelBar').style.background = col(c.fuel); $('fuelLbl').textContent = Math.round(c.fuel) + '%';
     $('dmgBar').style.width = c.dmg + '%'; $('dmgBar').style.background = c.dmg > 50 ? '#ff4757' : c.dmg > 25 ? '#f4b400' : '#2ecc71'; $('dmgLbl').textContent = Math.round(c.dmg) + '%';
-    const me = myCar(); $('boxBtn').classList.toggle('on', !!(me && me.boxReq)); $('boxBtn').textContent = me && me.boxReq ? '📥 Box prenotato' : '📥 Box';
+    const me = myCar(); $('boxBtn').classList.toggle('on', !!(me && me.boxReq)); $('boxBtn').innerHTML = '📥<span class="lbl">' + (me && me.boxReq ? ' Box prenotato' : ' Box') + '</span>';
     $('boxBtn').style.display = (wearOn() || (me && me.dmg > 0)) && laps > 1 ? '' : 'none'; }
   $('lapTimeLbl').textContent = fmtTime(Math.max(0, c.time - c.lapStart));
   $('bestLbl').textContent = fmtTime(c.best);
@@ -2397,6 +2432,7 @@ $('rpExit').onclick = () => endReplay();
 $('rpSkip').onclick = () => { if (RP && RP.mode === 'hl') endReplay(); };
 $('endMenuBtn').onclick = toMainMenu;
 goBtn.onclick = () => { if (phase === 'aim' && !paused) confirmMove(); };
+$('hud').onclick = () => $('hud').classList.toggle('full');   // su telefono: tocco per vedere tutti i dati
 $('camBtn').onclick = () => { const c = OPT.camMode === 'mia' ? myCar() : cur(); if (c) focusCamera(c); };
 $('boxBtn').onclick = () => { if (MP.active) { const me = humansIn().find(h => !h.finished && !h.out && !h.inPit); if (me) MP.net.send('box', { ci: cars.indexOf(me), on: !me.boxReq }); return; } const c0 = cur(), me = c0 && c0.human && !c0.finished && !c0.out ? c0 : humansIn().find(h => !h.finished && !h.out);   /* in hot-seat prenota per chi sta giocando il turno */ if (!me || me.inPit) return; me.boxReq = !me.boxReq; log(me.boxReq ? `📥 <b style="color:${me.color}">${me.name}</b> prenota il box: entrerà al prossimo passaggio sul traguardo.` : `<b style="color:${me.color}">${me.name}</b> annulla il box.`); updateHUD(); updateRank(); };
 $('camModeBtn').onclick = () => { OPT.camMode = OPT.camMode === 'mia' ? 'turni' : 'mia'; applyOptions(); renderOptions(); const c = OPT.camMode === 'mia' ? myCar() : cur(); if (c && phase !== 'menu') focusCamera(c); };
@@ -2758,7 +2794,7 @@ updateResumeBtn();
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.17';
+const GAME_VERSION = 'v0.18';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
