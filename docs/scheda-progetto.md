@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.24** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
+Versione attuale: **v0.25** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -75,6 +75,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - **Per ora si corre solo sulla Mini Monza, in tutte le modalità (v0.23):** le altre due piste si vedono con il lucchetto, grigie e con "Presto disponibile" nella gara da soli, "🔒 … · presto" nella stanza online. Si sbloccano cambiando `TRACKS_OPEN` nel codice (e le opzioni di `#lbTrack`).
 
 ## Grafica e atmosfera (stile "plastico")
+- **Auto (v0.25):** Turismo con carrozzeria a profilo estruso, passaruota, vetri, montante, livrea a strisce (scura sulle auto chiare), tondo del numero sulle porte, minigonne, specchietti, fari e fanali, griglia, splitter, estrattore, scarico, alettone; Formula 1 con muso, abitacolo, cofano con presa d'aria e pinna, pance con prese, fondo, halo, casco con visiera, ala anteriore e posteriore a due elementi con paratie, beam wing, sospensioni. Ruote con cerchio e razze (si vede che girano). I pezzi sono uniti in pochi oggetti con i colori sui vertici (`mergeCarParts`, usa `lib/addons/utils/BufferGeometryUtils.js`); alettoni e ruote restano separati perché cadono con i danni (oltre il 50%) e girano.
 - Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi. **Niente deve sporgere dal bordo del plastico** (regola di Christian): alberi, rocce e oggetti stanno dentro la base, con margine per la chioma.
 - Muretti con striscioni, reti, gomme rosse e bianche, ghiaia, tribune coperte, box con tetto arancione e torre, postazioni dei commissari con il commissario e la bandiera.
 - Case, palazzi, strada perimetrale, parcheggi, torri faro, mongolfiere, folla animata che esulta.
@@ -141,6 +142,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.25:** auto rifatte (Turismo e Formula 1 più dettagliate, pezzi uniti per non rallentare).
 - **v0.24:** musica, folla e nuovi effetti sonori; 5 lingue.
 - **v0.23:** solo Mini Monza in tutte le modalità (altre piste con il lucchetto); Ultra Pro verificato online.
 - **v0.22.1:** la scia colorata delle auto resta per tutta la gara, su tutti i giri (prima si cancellava dopo circa 10 mosse); si può spegnere in Opzioni → Scie delle auto.

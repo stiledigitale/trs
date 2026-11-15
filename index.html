@@ -209,7 +209,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.24</div>
+    <div class="ver">Prototipo v0.25</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -350,6 +350,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { DICT, HELP, LANGS, LOCALE } from './lang/i18n.js';
 
 /* ================== DATI ================== */
@@ -1397,50 +1398,145 @@ function stepJets(dt) {
   J.puffs.instanceMatrix.needsUpdate = true;
 }
 
+// ---- pezzi comuni per le auto ----
+const carMat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, flatShading: true, roughness: 0.5, metalness: 0.12, ...o });
+// profilo laterale (x lungo l'auto, y altezza) estruso di "depth" verso i lati, con smusso leggero
+function carProfile(pts, depth, m, bevel = 0) {
+  const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0], pts[i][1]);
+  const geo = new THREE.ExtrudeGeometry(sh, bevel ? { depth, bevelEnabled: true, bevelThickness: bevel, bevelSize: bevel * 0.8, bevelSegments: 1, curveSegments: 6 } : { depth, bevelEnabled: false, curveSegments: 6 });
+  geo.translate(0, 0, -depth / 2);
+  const mesh = new THREE.Mesh(geo, m); mesh.castShadow = true; return mesh;
+}
+// passaruota: semicerchio da un lato all'altro della ruota (percorso in avanti, sopra la ruota)
+const archPts = (cx, cy, r, bottom, n = 7) => { const p = [[cx - r, bottom]]; for (let i = 0; i <= n; i++) { const a = Math.PI - Math.PI * i / n; p.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } p.push([cx + r, bottom]); return p; };
+// ruota: gomma + cerchio + razze (le razze fanno vedere che gira); il gruppo ruota su z come prima
+function carWheel(r, w, rimCol, spokeCol) {
+  const g = new THREE.Group();
+  const tyre = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w, 14).rotateX(Math.PI / 2), carMat(0x15171c, { roughness: 0.9, metalness: 0 })); tyre.castShadow = true; g.add(tyre);
+  const rim = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.62, r * 0.62, w + 0.02, 10).rotateX(Math.PI / 2), carMat(rimCol, { metalness: 0.5, roughness: 0.35 })); g.add(rim);
+  const sm = carMat(spokeCol, { metalness: 0.4, roughness: 0.4 });
+  for (let k = 0; k < 3; k++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(r * 1.15, r * 0.14, w + 0.05), sm); sp.rotation.z = k * Math.PI / 3; g.add(sp); }
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.16, r * 0.16, w + 0.08, 6).rotateX(Math.PI / 2), carMat(0x2a2f38)); g.add(hub);
+  return g;
+}
+// unisce i pezzi dell'auto in pochi oggetti con i colori sui vertici: resta dettagliata ma si disegna con circa 8 elementi
+function bakeParts(list, root, kind) {
+  const geos = list.map(o => {
+    const mtx = new THREE.Matrix4(); let p = o; const chain = [];
+    while (p && p !== root) { chain.unshift(p); p = p.parent; }
+    for (const q of chain) { q.updateMatrix(); mtx.multiply(q.matrix); }
+    const ge = (o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone()).applyMatrix4(mtx);
+    for (const k of Object.keys(ge.attributes)) if (!['position', 'normal'].includes(k)) ge.deleteAttribute(k);
+    const c = o.material.color, n = ge.attributes.position.count, col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) { col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b; }
+    ge.setAttribute('color', new THREE.BufferAttribute(col, 3)); return ge;
+  });
+  const merged = mergeGeometries(geos); geos.forEach(ge => ge.dispose());
+  const mat = kind === 'light' ? new THREE.MeshBasicMaterial({ vertexColors: true })
+    : new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: kind === 'metal' ? 0.25 : 0.5, metalness: kind === 'metal' ? 0.55 : 0.12 });
+  const mesh = new THREE.Mesh(merged, mat); mesh.castShadow = kind !== 'light'; return mesh;
+}
+function mergeCarParts(g) {
+  const wheels = g.userData.wheels || [], spoiler = g.userData.spoiler || [], keep = new Set([...wheels, ...spoiler]);
+  const kindOf = m => m.emissive && m.emissive.getHex() ? 'light' : m.metalness >= 0.5 ? 'metal' : 'paint';
+  const buckets = { paint: [], metal: [], light: [] };
+  for (const o of [...g.children]) if (o.isMesh && !keep.has(o)) buckets[kindOf(o.material)].push(o);
+  for (const [k, list] of Object.entries(buckets)) if (list.length) { g.add(bakeParts(list, g, k)); list.forEach(o => { g.remove(o); o.geometry.dispose(); }); }
+  if (spoiler.length) { const sp = bakeParts(spoiler, g, 'paint'); spoiler.forEach(o => { g.remove(o); o.geometry.dispose(); }); g.add(sp); g.userData.spoiler = [sp]; }
+  for (const w of wheels) {   // ogni ruota: un solo oggetto che gira
+    const parts = w.children.filter(o => o.isMesh), wm = bakeParts(parts, w, 'paint');
+    parts.forEach(o => { w.remove(o); o.geometry.dispose(); }); w.add(wm);
+  }
+  return g;
+}
+const lightMat = (c, e) => new THREE.MeshStandardMaterial({ color: c, emissive: e, emissiveIntensity: 0.7, flatShading: true });
+const isLight = col => { const c = new THREE.Color(col); return c.r * 0.3 + c.g * 0.59 + c.b * 0.11 > 0.6; };
+
 /* ================== AUTO ================== */
+// vettura turismo low poly (muso a +X): carrozzeria sagomata con passaruota, abitacolo con vetri, livrea a strisce
 function makeCar(color) {
   const g = new THREE.Group();
-  const mat = c => new THREE.MeshStandardMaterial({ color: c, flatShading: true, roughness: 0.55, metalness: 0.1 });
-  const prof = (pts, depth, m) => {
-    const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) sh.lineTo(pts[i][0], pts[i][1]);
-    const geo = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false }); geo.translate(0, 0, -depth / 2);
-    const mesh = new THREE.Mesh(geo, m); mesh.castShadow = true; return mesh;
-  };
-  g.add(prof([[-2.25, 0.4], [2.3, 0.4], [2.38, 0.85], [1.0, 1.15], [0.45, 1.85], [-1.3, 1.9], [-1.95, 1.3], [-2.3, 1.25]], 2.1, mat(color)));
-  g.add(prof([[0.95, 1.2], [0.47, 1.78], [-1.25, 1.83], [-1.82, 1.33]], 2.16, mat(0x1d2430)));
-  const sp = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.12, 2.3), mat(0x1d2430)); sp.position.set(-2.1, 1.75, 0); sp.castShadow = true; g.add(sp);
-  g.userData.spoiler = [sp];
-  for (const s of [-0.7, 0.7]) { const st = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.4, 0.12), mat(0x1d2430)); st.position.set(-2.05, 1.5, s); g.add(st); g.userData.spoiler.push(st); }
-  for (const s of [-0.75, 0.75]) { const l = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.22, 0.45), new THREE.MeshStandardMaterial({ color: 0xfff6c8, emissive: 0xfff2a0, emissiveIntensity: 0.6 })); l.position.set(2.36, 0.75, s); g.add(l); }
-  const wheels = [], wg = new THREE.CylinderGeometry(0.55, 0.55, 0.5, 8).rotateX(Math.PI / 2), wm = mat(0x16181d);
-  for (const [x, z] of [[1.4, 1.1], [1.4, -1.1], [-1.4, 1.1], [-1.4, -1.1]]) { const w = new THREE.Mesh(wg, wm); w.position.set(x, 0.55, z); w.castShadow = true; g.add(w); wheels.push(w); }
+  const body = carMat(color), dark = carMat(0x1d2430), glass = carMat(0x1f2b3a, { roughness: 0.15, metalness: 0.6 });
+  const stripe = carMat(isLight(color) ? 0x1d2430 : 0xf4f6f8);
+  const add = (o, x = 0, y = 0, z = 0) => { o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  // carrozzeria: paraurti smussati e passaruota
+  const shell = [[2.28, 0.36], [2.44, 0.52], [2.44, 0.76], [2.3, 0.94], [1.0, 1.12], [-1.62, 1.14], [-2.3, 1.08], [-2.42, 0.92], [-2.42, 0.52], [-2.26, 0.36],
+    ...archPts(-1.4, 0.52, 0.68, 0.36), ...archPts(1.4, 0.52, 0.68, 0.36)];
+  g.add(carProfile(shell, 1.86, body, 0.09));
+  // abitacolo: tetto in tinta, vetri che sporgono un poco (parabrezza, lunotto e finestrini)
+  g.add(carProfile([[1.04, 1.1], [0.36, 1.74], [-1.02, 1.8], [-1.64, 1.12]], 1.6, body, 0.05));
+  g.add(carProfile([[1.1, 1.11], [0.4, 1.7], [-1.0, 1.75], [-1.68, 1.1], [-1.4, 1.1], [0.9, 1.1]], 1.78, glass));
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 1.82), body), -0.28, 1.44, 0);   // montante centrale
+  // livrea: striscia su cofano, tetto e baule
+  g.add(carProfile([[2.36, 1.03], [1.0, 1.21], [1.0, 1.25], [2.36, 1.07]], 0.42, stripe));
+  g.add(carProfile([[0.36, 1.81], [-1.02, 1.87], [-1.02, 1.9], [0.36, 1.84]], 0.42, stripe));
+  g.add(carProfile([[-1.68, 1.24], [-2.34, 1.18], [-2.34, 1.22], [-1.68, 1.28]], 0.42, stripe));
+  for (const s of [-1, 1]) {   // tondo del numero sulle porte, minigonne, specchietti, fari
+    const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.03, 12).rotateX(Math.PI / 2), carMat(0xf4f6f8)); disc.position.set(-0.05, 0.78, s * 1.04); g.add(disc);
+    const num = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.26, 0.035), dark); num.position.set(-0.05, 0.78, s * 1.055); g.add(num);
+    add(new THREE.Mesh(new THREE.BoxGeometry(1.36, 0.12, 0.1), dark), 0, 0.42, s * 1.0);
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.13, 0.16), body), 0.82, 1.24, s * 0.98);
+    const hl = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.15, 0.44), lightMat(0xfff6c8, 0xfff2a0)); hl.position.set(2.42, 0.84, s * 0.6); hl.rotation.z = -0.5; g.add(hl);
+    const tl = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.13, 0.46), lightMat(0xff3b47, 0xc0101c)); tl.position.set(-2.44, 0.86, s * 0.62); g.add(tl);
+  }
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.2, 1.0), dark), 2.46, 0.66, 0);      // griglia
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.06, 2.0), dark), 2.36, 0.36, 0);     // splitter
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.16, 1.7), dark), -2.4, 0.44, 0);      // estrattore
+  add(new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.22, 6).rotateZ(Math.PI / 2), carMat(0x8d949c, { metalness: 0.7 })), -2.48, 0.46, 0.62);   // scarico
+  // alettone (cade con i danni gravi)
+  const wing = add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.07, 2.0), dark), -2.12, 1.62, 0);
+  g.userData.spoiler = [wing];
+  for (const s of [-1, 1]) {
+    g.userData.spoiler.push(add(new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.3, 0.05), dark), -2.12, 1.56, s * 1.0));
+    g.userData.spoiler.push(add(new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.44, 0.08), dark), -2.08, 1.36, s * 0.55));
+  }
+  const wheels = [];
+  for (const [x, z] of [[1.4, 1.0], [1.4, -1.0], [-1.4, 1.0], [-1.4, -1.0]]) { const w = carWheel(0.55, 0.42, 0xc9ced6, 0x6b7280); w.position.set(x, 0.55, z); g.add(w); wheels.push(w); }
   g.userData.wheels = wheels;
-  return g;
+  return mergeCarParts(g);
 }
 // monoposto Formula 1 low poly (muso a +X, come l'auto turismo)
 function makeF1(color) {
   const g = new THREE.Group();
-  const mat = c => new THREE.MeshStandardMaterial({ color: c, flatShading: true, roughness: 0.5, metalness: 0.15 });
-  const body = mat(color), dark = mat(0x1d2430), white = mat(0xf4f6f8);
-  const add = (geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
-  add(new THREE.BoxGeometry(3.6, 0.42, 0.85), body, -0.2, 0.5, 0);                         // telaio
-  add(new THREE.ConeGeometry(0.36, 1.7, 4).rotateZ(-Math.PI / 2).rotateX(Math.PI / 4), body, 2.4, 0.42, 0);   // muso
-  for (const z of [-0.62, 0.62]) add(new THREE.BoxGeometry(1.7, 0.42, 0.42), body, -0.4, 0.45, z);   // pance laterali
-  add(new THREE.BoxGeometry(1.3, 0.55, 0.6), body, -1.0, 0.85, 0);                         // cofano motore
-  add(new THREE.BoxGeometry(0.9, 0.1, 0.62), dark, 0.45, 0.73, 0);                          // abitacolo
-  add(new THREE.IcosahedronGeometry(0.26, 0), white, 0.35, 0.95, 0);                       // casco
-  add(new THREE.BoxGeometry(0.08, 0.08, 0.7), dark, 0.75, 1.12, 0);                         // halo
-  const fw = add(new THREE.BoxGeometry(0.55, 0.07, 2.5), white, 3.0, 0.2, 0);               // ala anteriore
-  for (const z of [-1.22, 1.22]) add(new THREE.BoxGeometry(0.6, 0.3, 0.05), body, 3.0, 0.3, z);
-  const rw = add(new THREE.BoxGeometry(0.5, 0.08, 1.9), body, -2.25, 1.25, 0);              // ala posteriore
-  const rw2 = add(new THREE.BoxGeometry(0.35, 0.06, 1.9), white, -2.0, 1.1, 0);
-  const ep = [-0.95, 0.95].map(z => add(new THREE.BoxGeometry(0.7, 0.75, 0.05), dark, -2.2, 0.95, z));
-  const wheels = [], wm = mat(0x16181d);
-  for (const [x, z, r, w] of [[1.75, 1.0, 0.42, 0.36], [1.75, -1.0, 0.42, 0.36], [-1.55, 1.02, 0.52, 0.55], [-1.55, -1.02, 0.52, 0.55]]) {
-    const wh = add(new THREE.CylinderGeometry(r, r, w, 10).rotateX(Math.PI / 2), wm, x, r, z); wheels.push(wh);
+  const body = carMat(color), dark = carMat(0x1d2430), white = carMat(0xf4f6f8), carbon = carMat(0x2a2f38, { roughness: 0.4 });
+  const add = (o, x = 0, y = 0, z = 0) => { o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  const box = (sx, sy, sz, m, x, y, z) => add(new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), m), x, y, z);
+  g.add(carProfile([[3.0, 0.28], [3.0, 0.4], [1.25, 0.8], [1.25, 0.3]], 0.46, body, 0.04));                       // muso
+  g.add(carProfile([[1.35, 0.28], [1.35, 0.82], [0.25, 0.94], [-0.45, 0.94], [-0.45, 0.28]], 0.84, body, 0.04));   // abitacolo
+  g.add(carProfile([[-0.25, 0.3], [-0.25, 0.86], [-0.3, 1.3], [-0.78, 1.34], [-2.2, 0.74], [-2.2, 0.3]], 0.6, body, 0.04));   // cofano motore e presa d'aria
+  g.add(carProfile([[-0.8, 1.32], [-2.15, 1.02], [-2.15, 1.22]], 0.04, body));                                    // pinna
+  box(0.05, 0.22, 0.28, dark, -0.27, 1.14, 0);                                                                      // bocca della presa d'aria
+  for (const s of [-1, 1]) {   // pance laterali con le prese, specchietti
+    const pod = carProfile([[0.55, 0.3], [0.55, 0.72], [0.25, 0.8], [-1.5, 0.64], [-1.95, 0.42], [-1.95, 0.3]], 0.46, body, 0.04);
+    pod.position.z = s * 0.66; g.add(pod);
+    box(0.05, 0.3, 0.38, dark, 0.6, 0.55, s * 0.66);
+    box(0.14, 0.09, 0.2, body, 0.55, 1.0, s * 0.62);
   }
-  g.userData.wheels = wheels; g.userData.spoiler = [rw, rw2, ...ep, fw];
-  return g;
+  box(3.9, 0.05, 1.7, carbon, -0.3, 0.26, 0);                                                                        // fondo
+  // halo sopra il pilota, casco con visiera
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.045, 4, 10, Math.PI).rotateZ(-Math.PI / 2).rotateX(Math.PI / 2), carbon);
+  add(halo, 0.12, 1.12, 0); box(0.07, 0.24, 0.07, carbon, 0.55, 1.0, 0);
+  add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.25, 1), white), 0.12, 1.03, 0);
+  box(0.06, 0.08, 0.3, dark, 0.34, 1.06, 0);
+  // ala anteriore a due elementi con paratie
+  const fw = box(0.6, 0.05, 2.5, white, 3.02, 0.18, 0);
+  const fw2 = box(0.32, 0.05, 2.36, body, 2.86, 0.28, 0); fw2.rotation.z = 0.28;
+  const fwe = [-1, 1].map(s => box(0.72, 0.32, 0.05, dark, 2.98, 0.3, s * 1.24));
+  // ala posteriore: piano principale, flap, paratie, beam wing
+  const rw = box(0.48, 0.07, 1.9, body, -2.3, 1.18, 0);
+  const rw2 = box(0.32, 0.06, 1.9, white, -2.12, 1.34, 0); rw2.rotation.z = 0.32;
+  const rwe = [-1, 1].map(s => box(0.8, 0.72, 0.05, dark, -2.22, 1.04, s * 0.97));
+  const beam = box(0.3, 0.05, 1.2, dark, -2.38, 0.58, 0);
+  box(0.1, 0.5, 0.06, dark, -2.25, 0.88, 0);
+  // ruote con cerchi e sospensioni
+  const wheels = [];
+  for (const [x, z, r, w] of [[1.85, 1.0, 0.42, 0.36], [1.85, -1.0, 0.42, 0.36], [-1.55, 1.02, 0.52, 0.56], [-1.55, -1.02, 0.52, 0.56]]) {
+    const wh = carWheel(r, w, 0x2a2f38, color); wh.position.set(x, r, z); g.add(wh); wheels.push(wh);
+    const s = Math.sign(z), inner = x > 0 ? 0.24 : 0.5;
+    for (const y of [r + 0.08, r - 0.08]) box(0.07, 0.04, Math.abs(z) - inner - w / 2, carbon, x, y, s * (inner + (Math.abs(z) - inner - w / 2) / 2));
+  }
+  g.userData.wheels = wheels; g.userData.spoiler = [rw, rw2, ...rwe, beam, fw, fw2, ...fwe];
+  return mergeCarParts(g);
 }
 const F1_PRESETS = {
   f1_eq: { name: 'Equilibrata',  accel: 15, brake: 21, grip: 26, vmax: 54 },
@@ -3237,7 +3333,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.24';
+const GAME_VERSION = 'v0.25';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
