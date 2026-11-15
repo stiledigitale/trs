@@ -66,6 +66,8 @@
   .tracks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
   .tcard{background:#1b2338;border:2px solid transparent;border-radius:12px;padding:10px;cursor:pointer;transition:border-color .15s}
   .tcard.sel{border-color:#e63946}
+  .tcard.locked{cursor:not-allowed;opacity:.5;filter:grayscale(.7)}
+  .tcard.locked b::before{content:'🔒 '}
   .tcard canvas{width:100%;height:auto;display:block;border-radius:8px;background:#22304a}
   .tcard b{display:block;margin-top:8px;font-size:15px}
   .tcard span{display:block;font-size:12.5px;color:#9fb0cc;line-height:1.4;margin-top:2px}
@@ -207,7 +209,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.22.1</div>
+    <div class="ver">Prototipo v0.23</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -2439,17 +2441,18 @@ document.querySelectorAll('[data-opt]').forEach(b => b.onclick = () => $('optOve
 
 // piste
 let selTrack = 'monza';
+const TRACKS_OPEN = ['monza'];   // per ora si corre solo sulla Mini Monza: le altre piste si vedono con il lucchetto
 function renderTrackCards() {
   const box = $('trackCards'); box.innerHTML = '';
   for (const [k, T] of Object.entries(TRACKS)) {
     const st = sampleTrack(T.ctrl);
-    const card = document.createElement('div'); card.className = 'tcard' + (k === selTrack ? ' sel' : '');
+    const open = TRACKS_OPEN.includes(k), card = document.createElement('div'); card.className = 'tcard' + (k === selTrack ? ' sel' : '') + (open ? '' : ' locked');
     const cv = document.createElement('canvas'); cv.width = 400; cv.height = 240;
     const ctx = cv.getContext('2d'); ctx.fillStyle = { prati: '#5f9a43', alpi: '#4e7f3d', parco: '#56893f' }[T.theme] || '#4e7f3d'; ctx.fillRect(0, 0, 400, 240);
     drawTrackShape(ctx, st.pts, mmFit(st.pts, 400, 240, 22), 0, 10);
     card.append(cv);
-    card.insertAdjacentHTML('beforeend', `<b>${T.name}</b><span>${T.desc}</span><span>Giro di circa ${Math.round(st.len)} m</span>`);
-    card.onclick = () => { selTrack = k; renderTrackCards(); if (trackKey !== k) { buildWorld(k); } };
+    card.insertAdjacentHTML('beforeend', `<b>${T.name}</b><span>${T.desc}</span><span>${open ? `Giro di circa ${Math.round(st.len)} m` : 'Presto disponibile'}</span>`);
+    card.onclick = () => { if (!open) return; selTrack = k; renderTrackCards(); if (trackKey !== k) { buildWorld(k); } };
     box.append(card);
   }
 }
@@ -3089,7 +3092,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.22.1';
+const GAME_VERSION = 'v0.23';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {

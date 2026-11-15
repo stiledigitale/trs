@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.22.1** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase) e `fonts/` (Rubik): tutto incluso, nessun build, audio sintetizzato.
+Versione attuale: **v0.23** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase) e `fonts/` (Rubik): tutto incluso, nessun build, audio sintetizzato.
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -42,7 +42,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
   - **Facile:** traiettoria colorata (verde pulita, arancione contatto, rossa uscita) e avviso **giallo** per le traiettorie pulite ma senza scampo al turno dopo; danni dimezzati, massimo 60%.
   - **Medio:** nessun avviso di uscita di pista (resta quello di contatto); danni pieni ma niente ritiro.
   - **Pro:** **nessun avviso**, né di uscita né di contatto: traiettoria sempre blu. 15 secondi per turno, ritiro con danni ≥ 75% ("se rompi sei fuori").
-  - **Ultra Pro (v0.22):** come il Pro ma con **5 secondi a mossa** (anche in hot-seat e online); allo scadere parte la mossa impostata in quel momento. Nella classifica online i tempi contano come Pro.
+  - **Ultra Pro (v0.22):** come il Pro ma con **5 secondi a mossa** (anche in hot-seat e online: l'host lo sceglie nella stanza); allo scadere parte la mossa impostata in quel momento. Nella classifica online i tempi contano come Pro.
   - Idea scartata da Christian: turni simultanei (tutti muovono insieme). Resta a turni alterni.
 - **Classi:**
   - **Turismo:** assetti Bilanciata, Scatto, Aderenza, Velocità.
@@ -72,7 +72,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - **Mini Monza:** ricalcata dalla piantina "MiniMonza" di Christian, a 0,3 m per pixel. Giro di circa 825 m, corsia box funzionante con raccordi lisci, ruderi della sopraelevata, Frecce Tricolori.
 - **Anello di prova:** corto (circa 538 m), con prati, lago, fattoria e pale eoliche.
 - **Valle delle Dolomiti:** lunga (circa 1105 m), con abeti e rocce innevate.
-- **Online per ora solo Mini Monza:** le altre due compaiono nella stanza con il lucchetto ("🔒 … · presto"). Nella gara da soli sono tutte disponibili.
+- **Per ora si corre solo sulla Mini Monza, in tutte le modalità (v0.23):** le altre due piste si vedono con il lucchetto, grigie e con "Presto disponibile" nella gara da soli, "🔒 … · presto" nella stanza online. Si sbloccano cambiando `TRACKS_OPEN` nel codice (e le opzioni di `#lbTrack`).
 
 ## Grafica e atmosfera (stile "plastico")
 - Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi. **Niente deve sporgere dal bordo del plastico** (regola di Christian): alberi, rocce e oggetti stanno dentro la base, con margine per la chioma.
@@ -131,6 +131,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.23:** solo Mini Monza in tutte le modalità (altre piste con il lucchetto); Ultra Pro verificato online.
 - **v0.22.1:** la scia colorata delle auto resta per tutta la gara, su tutti i giri (prima si cancellava dopo circa 10 mosse); si può spegnere in Opzioni → Scie delle auto.
 - **v0.22:** livello Ultra Pro con 5 secondi a mossa.
 - **v0.21.1:** alberi e oggetti sempre dentro il bordo del plastico (prima i boschetti vicino al bordo sporgevano).
@@ -147,6 +148,6 @@ Due voci separate nel menu principale (v0.21):
 
 ## Prossimi passi concordati
 1. Rifiniture del multiplayer dopo altre prove (per esempio invito con link, messaggi rapidi, host che passa a un altro giocatore se esce).
-2. Sbloccare le altre piste online quando sono pronte; pulizia della classifica dai tempi di prova prima del lancio.
+2. Sbloccare le altre piste (gara da soli e online) quando sono pronte; pulizia della classifica dai tempi di prova prima del lancio.
 3. Scelta del portale e adattamento dell'adattatore `Portal` (SDK, pubblicità, nome del giocatore).
 4. In seguito: editor dei tracciati (anche importando una piantina, come per la MiniMonza) ed editor delle vetture.
