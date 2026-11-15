@@ -103,6 +103,18 @@
   .mpbox{background:#1b2338;border-radius:12px;padding:12px 14px}
   #lbCode{letter-spacing:.15em}
   .tagh{font-size:11px;font-weight:800;background:#e63946;color:#fff;border-radius:6px;padding:2px 6px;margin-left:6px}
+  #vOnline{width:min(820px,96vw)}
+  .ollist{max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+  .olrow{display:flex;align-items:center;gap:10px;background:#222c42;border-radius:10px;padding:8px 10px;font-size:14px}
+  .olrow .nm{flex:1;min-width:0}
+  .olrow .nm b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .olrow small{color:#9fb0cc}
+  .olrow input{width:110px;padding:7px 8px;font-size:13px}
+  .olrow button{padding:8px 12px}
+  .mpopts{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .mpopts label{font-size:13px;color:#9fb0cc}
+  .olrec{display:flex;flex-direction:column;gap:3px;font-size:13px}
+  .olrec div{display:flex;gap:8px}.olrec div span:first-child{width:22px;color:#9fb0cc}.olrec div span:nth-child(2){flex:1}
   .hidden{display:none!important}
   @media (max-width:1100px){#hint{display:none}}
   /* telefono (verticale o orizzontale): pannelli di gioco compatti; toccando il pannello del pilota si vedono tutti i dati */
@@ -194,7 +206,7 @@
     <button class="big" data-go="vOnline">Multiplayer online <small>con gli amici</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.18</div>
+    <div class="ver">Prototipo v0.19</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -206,7 +218,7 @@
     <div class="stats" id="statsHelp"></div>
     <div class="foot">
       <button data-go="vMain">← Indietro</button>
-      <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso + 15 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+      <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso (né uscite né contatti) + 15 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
       <button class="primary" id="startBtn" style="font-size:16px;padding:12px 26px">Via!</button></div>
     </div>
   </div>
@@ -216,16 +228,23 @@
     <p class="sub">Gioca con gli amici, ognuno dal suo computer o telefono: uno crea la stanza, gli altri entrano con il codice.</p>
     <h4>Il tuo nome</h4>
     <input id="mpName" type="text" maxlength="13" class="mpin" placeholder="Il tuo nome">
+    <div class="mpbox" style="margin-top:14px"><h4 style="margin-top:0">Stanze aperte <small id="olCount" style="text-transform:none;letter-spacing:0;font-weight:400"></small></h4><div id="olList" class="ollist"><p class="sub">Cerco le stanze…</p></div></div>
     <div class="mprow">
-      <div class="mpbox"><h4 style="margin-top:0">Nuova stanza</h4><button class="primary" id="mpCreate">Crea una stanza</button></div>
-      <div class="mpbox"><h4 style="margin-top:0">Hai un codice?</h4><div style="display:flex;gap:8px"><input id="mpCode" type="text" maxlength="5" placeholder="ABCDE" class="mpin" style="text-transform:uppercase;letter-spacing:.2em;width:130px"><button class="primary" id="mpJoin">Entra</button></div></div>
+      <div class="mpbox"><h4 style="margin-top:0">Nuova stanza</h4>
+        <input id="mpRoomName" type="text" maxlength="24" class="mpin" placeholder="Nome della stanza" style="width:100%">
+        <div class="mpopts"><label>Stanza <select id="mpPublic"><option value="1">Pubblica (in elenco)</option><option value="0">Privata (solo codice)</option></select></label><label>Posti <select id="mpSeats"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label></div>
+        <input id="mpPass" type="text" maxlength="20" class="mpin" placeholder="Password (facoltativa)" style="width:100%;margin-top:8px" autocomplete="off">
+        <button class="primary" id="mpCreate" style="margin-top:10px;width:100%">Crea la stanza</button></div>
+      <div class="mpbox"><h4 style="margin-top:0">Hai un codice?</h4><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="mpCode" type="text" maxlength="5" placeholder="ABCDE" class="mpin" style="text-transform:uppercase;letter-spacing:.2em;width:130px"><button class="primary" id="mpJoin">Entra</button></div>
+        <input id="mpCodePass" type="text" maxlength="20" class="mpin" placeholder="Password, se la stanza ce l'ha" style="width:100%;margin-top:8px" autocomplete="off">
+        <h4>Migliori giri · Mini Monza</h4><div id="olRecords" class="olrec"><p class="sub">Carico…</p></div></div>
     </div>
     <p class="sub" id="mpMsg" style="margin-top:12px"></p>
     <div class="foot"><button data-go="vMain">← Indietro</button></div>
   </div>
 
   <div id="vLobby" class="card hidden">
-    <h2>Stanza <span id="lbCode">-----</span></h2>
+    <h2><span id="lbName" style="color:inherit">Stanza</span> · <span id="lbCode">-----</span></h2>
     <p class="sub" id="lbInfo">Dai questo codice agli amici: lo scrivono in "Hai un codice?".</p>
     <h4>Piloti</h4>
     <div id="lbPlayers"></div>
@@ -239,6 +258,7 @@
       <label>Auto CPU <select id="lbCpu"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
     </div>
     <p class="sub" id="lbNote" style="margin-top:10px"></p>
+    <h4>Record della pista</h4><div id="lbRecords" class="olrec"><p class="sub">Carico…</p></div>
     <div class="foot"><button id="lbLeave">← Esci dalla stanza</button><div class="r"><label>Il tuo assetto <select id="lbSetup"></select></label><button id="lbReady">Sono pronto</button><button class="primary" id="lbStart">Via!</button></div></div>
   </div>
 
@@ -1557,8 +1577,9 @@ function buildZone(c) {
   zoneLine.geometry.dispose(); zoneLine.geometry = new THREE.BufferGeometry().setFromPoints(outline);
   zoneMat.color.set(c.color); zoneLine.material.color.set(c.color);
 }
-const hideOff = c => c.human && mode !== 'facile';
-const turnMax = () => mode === 'pro' ? PRO_SECONDS : MP.active ? MP_TURN_SEC : PRO_SECONDS;
+const hideOff = c => c.human && mode !== 'facile';   // Medio e Pro: niente avviso di uscita di pista
+const hideHit = c => c.human && mode === 'pro';      // Pro: niente avviso di collisione
+const turnMax = () => MP.active ? MP_TURN_SEC : PRO_SECONDS;
 function updateAim() {
   const c = cur(); if (!c) return;
   preview = resolveMove(c, aim.d, aim.u, 40, othersOf(c));
@@ -1570,9 +1591,9 @@ function updateAim() {
   // Facile: traiettoria pulita ma senza scampo al turno dopo (nessuna frenata possibile evita l'uscita)
   preview.trap = c.human && mode === 'facile' && preview.status === 'ok' && aim.d >= 0.3 && !feasible(nextState(c, preview), 2, HALF + 0.6);
   const hidden = hideOff(c) && preview.status === 'off';
-  const col = preview.trap ? 0xf4c430 : hidden ? 0x5fb4ff : hideOff(c) && preview.status === 'ok' ? 0x5fb4ff : { ok: 0x2ecc71, hit: 0xffa502, off: 0xff4757 }[preview.status];
+  const col = preview.trap ? 0xf4c430 : hidden ? 0x5fb4ff : hideOff(c) && preview.status === 'ok' ? 0x5fb4ff : hideHit(c) && preview.status === 'hit' ? 0x5fb4ff : { ok: 0x2ecc71, hit: 0xffa502, off: 0xff4757 }[preview.status];
   pathMat.color.setHex(col); handle.material.color.setHex(col);
-  hitMark.visible = preview.status === 'hit' || (preview.status === 'off' && !hideOff(c));
+  hitMark.visible = (preview.status === 'hit' && !hideHit(c)) || (preview.status === 'off' && !hideOff(c));
   if (hitMark.visible) { const p = preview.pts[preview.pts.length - 1]; hitMark.position.set(p.x, 0.9, p.z); }
   updateHUD();
 }
@@ -1674,10 +1695,7 @@ function beginTurn() {
   const [lo, hi] = range(c);
   aim = { d: c.v > 0 ? clamp(c.v, lo, hi) : hi, u: 0 }; aimSuggested = false;
   const ctl = ctrlOf(c);
-  if (ctl === 'local' && mode === 'facile') {   // in Facile il bersaglio parte su una mossa sicura suggerita
-    const sug = aiChoose({ x: c.x, z: c.z, a: c.a, idx: c.idx, v: c.v, accel: c.accel, brake: c.brake, grip: c.grip, vmax: c.vmax, lat: c.lat, draft: c.draft, lastSteer: c.lastSteer || 0 }, othersOf(c), AI.normale);
-    if (sug) { aim = { d: sug.d, u: sug.u }; aimSuggested = true; }
-  }
+  // nessuna mossa suggerita, a nessun livello: il bersaglio parte dritto alla velocità attuale
   makeGhost(c.color); buildZone(c);
   aimGroup.visible = true;
   if (ctl === 'local') { phase = 'aim'; goBtn.disabled = false; turnLeft = turnMax(); updateAim(); if (!MP.active) saveGame(); }
@@ -2339,7 +2357,7 @@ function updateHUD() {
   if (phase === 'wait') { st.className = 'bad'; st.textContent = 'In testacoda: salta il turno'; return; }
   if (c.thinking) { st.className = 'neutral'; st.textContent = c.human && !c.netGone ? `In attesa di ${c.name}…` : 'CPU sta pensando…'; return; }
   if (!preview) return;
-  if (hideOff(c) && preview.status !== 'hit') { st.className = 'neutral'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : `Traiettoria impostata · livello ${mode}`; }
+  if (hideOff(c) && (preview.status !== 'hit' || hideHit(c))) { st.className = 'neutral'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : `Traiettoria impostata · livello ${mode}`; }
   else if (preview.status === 'ok' && preview.trap) { st.className = 'warn'; st.textContent = 'Attenzione: troppo veloce, al prossimo turno non potrai evitare l\'uscita. Frena prima!'; }
   else if (preview.status === 'ok') { st.className = 'ok'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : aimSuggested ? 'Traiettoria pulita · mossa suggerita' : 'Traiettoria pulita'; }
   else if (preview.status === 'hit') { st.className = 'warn'; st.textContent = `Contatto: ti fermi dietro e scendi a ${kmh(preview.speed)} km/h`; }
@@ -2359,6 +2377,7 @@ function updateRank() {
 function showView(id) {
   ['vMain', 'vSetup', 'vHelp', 'vRank', 'vOnline', 'vLobby'].forEach(v => $(v).classList.toggle('hidden', v !== id));
   if (id === 'vRank') loadLeaderboard();
+  if (id === 'vOnline') { openLobbyList(); loadRecords('olRecords', 'monza', 'turismo'); } else closeLobbyList();
   $('menu').classList.toggle('dim', id !== 'vMain');
 }
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => showView(b.dataset.go));
@@ -2543,7 +2562,7 @@ addEventListener('contextmenu', e => { if (e.target === renderer.domElement) e.p
    - dopo ogni mossa l'host manda la "fotografia" ufficiale di tutte le auto e del turno: gli altri la applicano
      prima di andare avanti, così nessuno può andare fuori sincronia (anche tra browser diversi).
    Con ?net=local nell'indirizzo la rete è simulata tra le schede dello stesso browser (per le prove). */
-const MP_TURN_SEC = 30, MP_MAX = 8;
+const MP_TURN_SEC = 15, MP_MAX = 8;   // online: 15 secondi per turno a tutti i livelli
 const MP = { active: false, host: false, net: null, code: null, peers: [], k: 0, inbox: {}, fixes: {}, pending: null, applying: false, timer: null, hostId: null, joinedAt: 0, ready: false, started: false };
 const myId = (() => { const r = () => Math.random().toString(36).slice(2, 10); try { let v = sessionStorage.getItem('trs-id'); if (!v) { v = r(); sessionStorage.setItem('trs-id', v); } return v; } catch (e) { return r(); } })();
 function ctrlOf(c) {
@@ -2552,13 +2571,13 @@ function ctrlOf(c) {
   return MP.host ? 'cpu' : 'remote';
 }
 function loadScript(src) { return new Promise((res, rej) => { if (window.supabase) return res(); const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.append(s); }); }
-async function makeNet(code) {
+async function makeNet(chName) {
   const handlers = {}; let peersFn = null;
   const emit = (ev, d) => (handlers[ev] || []).forEach(f => { try { f(d); } catch (e) { console.error(e); } });
   const api = { on: (ev, f) => (handlers[ev] = handlers[ev] || []).push(f), onPeers: f => { peersFn = f; } };
   if (new URLSearchParams(location.search).get('net') === 'local') {
     // rete simulata tra schede dello stesso browser
-    const bc = new BroadcastChannel('trs-' + code), seen = {}; let mine = null;
+    const bc = new BroadcastChannel(chName), seen = {}; let mine = null;
     const list = () => [...Object.values(seen).map(x => x.s), ...(mine ? [mine] : [])];
     const tick = () => { if (mine) bc.postMessage({ t: '_p', id: myId, s: mine }); const now = Date.now(); let ch = false; for (const id in seen) if (now - seen[id].at > 3500) { delete seen[id]; ch = true; } if (ch && peersFn) peersFn(list()); };
     bc.onmessage = e => { const m = e.data; if (m.t === '_p') { const nw = !seen[m.id] || JSON.stringify(seen[m.id].s) !== JSON.stringify(m.s); seen[m.id] = { s: m.s, at: Date.now() }; if (nw && peersFn) peersFn(list()); } else if (m.t === '_x') { delete seen[m.id]; peersFn && peersFn(list()); } else emit(m.t, m.d); };
@@ -2567,7 +2586,7 @@ async function makeNet(code) {
   }
   await loadScript('lib/supabase.js');
   const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
-  const ch = sb.channel('trs-room-' + code, { config: { broadcast: { self: false }, presence: { key: myId } } });
+  const ch = sb.channel(chName, { config: { broadcast: { self: false }, presence: { key: myId } } });
   ch.on('broadcast', { event: 'm' }, ({ payload }) => emit(payload.t, payload.d));
   const list = () => Object.values(ch.presenceState()).map(a => a[0]).filter(Boolean);
   ch.on('presence', { event: 'sync' }, () => peersFn && peersFn(list()));
@@ -2588,7 +2607,8 @@ const hostPeer = () => MP.peers.find(p => p.host);
 function mpTrack() {
   if (!MP.net) return;
   const st = { id: myId, name: mpName(), setup: $('lbSetup').value, ready: MP.host || MP.ready, host: MP.host, at: MP.joinedAt };
-  if (MP.host) Object.assign(st, { settings: lbSettings(), started: MP.started });
+  if (MP.host) Object.assign(st, { settings: lbSettings(), started: MP.started, room: MP.room });
+  mpAnnounce();
   MP.net.track(st);
 }
 function fillSetups(cls) {
@@ -2596,24 +2616,33 @@ function fillSetups(cls) {
   sel.innerHTML = Object.entries(CLASSES[cls].presets).map(([k, p]) => `<option value="${k}">${p.name}</option>`).join('');
   if (CLASSES[cls].presets[keep]) sel.value = keep;
 }
-async function mpOpen(code, asHost) {
+// con la password la stanza vera ha un indirizzo segreto (codice + impronta della password): senza la password giusta non la si trova
+async function pwTag(pw) {
+  pw = (pw || '').trim().toLowerCase(); if (!pw) return '';
+  try { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('trs:' + pw)); return '-' + [...new Uint8Array(h)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join(''); }
+  catch (e) { let x = 5381; for (const ch of pw) x = (x * 33 + ch.charCodeAt(0)) >>> 0; return '-' + x.toString(16); }
+}
+async function mpOpen(code, asHost, pw = '', room = null) {
   const msg = $('mpMsg'); msg.textContent = asHost ? 'Creo la stanza…' : 'Cerco la stanza…';
-  try { MP.net = await makeNet(code); }
+  closeLobbyList();
+  try { MP.net = await makeNet('trs-room-' + code + await pwTag(pw)); msg.textContent = ''; }
   catch (e) { msg.textContent = 'Connessione non riuscita. Controlla la rete e riprova (il multiplayer funziona sul sito del gioco).'; MP.net = null; return; }
-  Object.assign(MP, { code, host: asHost, joinedAt: Date.now(), ready: false, started: false, peers: [], active: false });
+  Object.assign(MP, { code, host: asHost, joinedAt: Date.now(), ready: false, started: false, peers: [], active: false, hasPw: !!pw.trim(), room: room || { name: '', pub: false, max: MP_MAX } });
   MP.net.onPeers(onPeers);
   MP.net.on('start', onNetStart); MP.net.on('mv', onNetMove); MP.net.on('fix', onNetFix); MP.net.on('gone', onNetGone);
   MP.net.on('box', d => { const c = cars[d.ci]; if (!c) return; c.boxReq = d.on; log(d.on ? `📥 <b style="color:${c.color}">${c.name}</b> prenota il box.` : `<b style="color:${c.color}">${c.name}</b> annulla il box.`); updateHUD(); updateRank(); });
   MP.net.on('lobby', () => { if (!MP.host && MP.active) mpBackToLobby(); });
-  $('lbCode').textContent = code; fillSetups($('lbClass').value);
+  $('lbCode').textContent = code; $('lbName').textContent = MP.room.name || 'Stanza'; fillSetups($('lbClass').value);
+  if (asHost) mpAnnounceOpen();
   showView('vLobby'); mpTrack(); renderLobby();
   if (!asHost) setTimeout(() => {   // dopo qualche secondo: la stanza esiste? è già in gara? è piena?
     if (!MP.net || MP.code !== code || MP.active) return;
-    const h = hostPeer(), why = !h ? 'Stanza non trovata: controlla il codice.' : h.started ? 'In questa stanza la gara è già partita.' : MP.peers.length > MP_MAX ? 'La stanza è piena.' : null;
+    const h = hostPeer(), max = h && h.room ? h.room.max : MP_MAX;
+    const why = !h ? (pw.trim() ? 'Password errata, oppure la stanza non esiste più.' : 'Stanza non trovata: controlla il codice (se la stanza ha il lucchetto serve la password).') : h.started ? 'In questa stanza la gara è già partita.' : MP.peers.length > max ? 'La stanza è piena.' : null;
     if (why) { mpLeave(); showView('vOnline'); $('mpMsg').textContent = why; }
   }, 3500);
 }
-function mpLeave() { clearTimeout(MP.timer); try { MP.net && MP.net.close(); } catch (e) {} Object.assign(MP, { net: null, active: false, host: false, code: null, peers: [], started: false }); }
+function mpLeave() { clearTimeout(MP.timer); clearInterval(MP.autoTimer); MP.autoTimer = null; mpAnnounceClose(); try { MP.net && MP.net.close(); } catch (e) {} Object.assign(MP, { net: null, active: false, host: false, code: null, peers: [], started: false }); }
 function renderLobby() {
   if (!MP.net) return;
   const h = hostPeer(), ps = sortedPeers();
@@ -2628,10 +2657,18 @@ function renderLobby() {
   $('lbStart').classList.toggle('hidden', !MP.host); $('lbReady').classList.toggle('hidden', MP.host);
   $('lbStart').disabled = !allReady || ps.length + +$('lbCpu').value < 2;
   $('lbReady').textContent = MP.ready ? 'Non sono pronto' : 'Sono pronto';
-  $('lbNote').textContent = MP.host ? (guests.length ? (allReady ? 'Tutti pronti: puoi partire!' : 'Aspetta che tutti siano pronti.') : 'Aspetta che entri almeno un amico con il codice.') : (h ? `L'host ${h.name} sceglie la gara e dà il via.` : 'Collegamento all\'host…');
+  const room = MP.host ? MP.room : (h && h.room) || MP.room, max = room.max || MP_MAX;
+  $('lbName').textContent = room.name || 'Stanza';
+  $('lbInfo').textContent = `${room.pub ? 'Stanza pubblica, visibile in "Stanze aperte"' : 'Stanza privata: si entra solo con il codice'}${MP.hasPw ? ' · con password 🔒' : ''} · posti ${Math.min(ps.length, max)}/${max}.` + (MP.host ? ' Dai il codice agli amici: lo scrivono in "Hai un codice?".' : '');
+  const full = ps.length >= max;
+  // posti tutti occupati e tutti pronti: la gara parte da sola dopo 5 secondi
+  if (MP.host && full && allReady && !MP.started) { if (!MP.autoTimer) { MP.autoLeft = 5; MP.autoTimer = setInterval(() => { MP.autoLeft--; if (MP.autoLeft <= 0) { clearInterval(MP.autoTimer); MP.autoTimer = null; if (MP.host && !MP.started) $('lbStart').onclick(); } else renderLobby(); }, 1000); } }
+  else if (MP.autoTimer) { clearInterval(MP.autoTimer); MP.autoTimer = null; }
+  $('lbNote').textContent = MP.autoTimer ? `Posti al completo e tutti pronti: la gara parte tra ${MP.autoLeft}…` : MP.host ? (guests.length ? (allReady ? (full ? 'Tutti pronti!' : `Tutti pronti: puoi partire con Via!, oppure aspettare (${ps.length}/${max}): a stanza piena si parte da soli.`) : 'Aspetta che tutti siano pronti.') : 'Aspetta che entri almeno un amico.') : (h ? `L'host ${h.name} sceglie la gara. Si parte con il suo Via!, oppure da soli quando la stanza è piena e tutti sono pronti.` : 'Collegamento all\'host…');
+  loadRecords('lbRecords', $('lbTrack').value, $('lbClass').value);
 }
 function onPeers(list) {
-  MP.peers = list;
+  MP.peers = list; mpAnnounce();
   if (MP.active) {   // in gara: chi esce passa alla CPU; se esce l'host la gara finisce (dopo 5 s di assenza: un attimo di rete lenta non conta)
     clearTimeout(MP.goneTimer);
     MP.goneTimer = setTimeout(() => {
@@ -2648,8 +2685,11 @@ function onPeers(list) {
 $('lbSetup').onchange = () => { mpTrack(); renderLobby(); };
 $('lbReady').onclick = () => { MP.ready = !MP.ready; mpTrack(); renderLobby(); };
 $('lbLeave').onclick = () => { mpLeave(); showView('vOnline'); $('mpMsg').textContent = ''; };
-$('mpCreate').onclick = () => mpOpen(newCode(), true);
-$('mpJoin').onclick = () => { const code = $('mpCode').value.trim().toUpperCase(); if (!/^[A-Z]{5}$/.test(code)) { $('mpMsg').textContent = 'Il codice è di 5 lettere.'; return; } mpOpen(code, false); };
+$('mpCreate').onclick = () => {
+  const room = { name: ($('mpRoomName').value.trim() || `Stanza di ${mpName()}`).slice(0, 24), pub: $('mpPublic').value === '1', max: +$('mpSeats').value };
+  mpOpen(newCode(), true, $('mpPass').value, room);
+};
+$('mpJoin').onclick = () => { const code = $('mpCode').value.trim().toUpperCase(); if (!/^[A-Z]{5}$/.test(code)) { $('mpMsg').textContent = 'Il codice è di 5 lettere.'; return; } mpOpen(code, false, $('mpCodePass').value); };
 $('mpCode').onkeydown = e => { if (e.key === 'Enter') $('mpJoin').onclick(); };
 $('lbStart').onclick = () => {
   if (!MP.host) return;
@@ -2657,7 +2697,7 @@ $('lbStart').onclick = () => {
   const players = sortedPeers().slice(0, MP_MAX).map(p => ({ name: p.name, type: 'human', car: CLASSES[st.cls].presets[p.setup] ? p.setup : presets[0], owner: p.id }));
   const cpuNames = DEFAULT_PLAYERS.filter(p => p.type === 'cpu').map(p => p.name);
   for (let i = 0; i < st.cpu && players.length < MP_MAX; i++) players.push({ name: cpuNames[i], type: 'cpu', car: presets[(i + 1) % presets.length] });
-  MP.started = true; mpTrack();
+  MP.started = true; clearInterval(MP.autoTimer); MP.autoTimer = null; mpTrack();
   MP.net.send('start', { cfg: { players, laps: st.laps, track: st.track, mode: st.mode, wear: st.wear, cls: st.cls }, hostId: myId });
 };
 function onNetStart(d) {
@@ -2673,6 +2713,61 @@ function mpBackToLobby() {
   token++; paused = false; phase = 'menu'; aimGroup.visible = false; engineSet(0, false);
   clearCars(); showGameUI(false); ['pause', 'endScreen', 'lights'].forEach(id => $(id).classList.add('hidden'));
   $('menu').classList.remove('hidden'); showView('vLobby'); mpTrack(); renderLobby();
+}
+
+
+// ---------- bacheca delle stanze aperte ----------
+// Canale comune "trs-lobbies": ogni stanza pubblica in attesa vi annuncia i suoi dati con la presence.
+// Le stanze spariscono da sole quando l'host esce, chiude la pagina o la gara parte.
+let LB = { net: null, list: [] }, ANN = { net: null, opening: null };
+async function mpAnnounceOpen() {
+  if (ANN.net || ANN.opening || !MP.room.pub) return;
+  ANN.opening = makeNet('trs-lobbies').then(n => { ANN.net = n; ANN.opening = null; mpAnnounce(); }).catch(() => { ANN.opening = null; });
+}
+function mpAnnounce() {
+  if (!ANN.net || !MP.host || !MP.room.pub) return;
+  const st = lbSettings();
+  ANN.net.track({ id: myId, code: MP.code, name: MP.room.name, host: mpName(), n: MP.peers.length || 1, max: MP.room.max, pw: MP.hasPw, open: !MP.started && !MP.active, track: st.track, cls: st.cls, laps: st.laps, mode: st.mode, v: GAME_VERSION });
+}
+function mpAnnounceClose() { try { ANN.net && ANN.net.close(); } catch (e) {} ANN.net = null; }
+async function openLobbyList() {
+  if (LB.net || LB.opening) return;
+  LB.opening = true;
+  try { LB.net = await makeNet('trs-lobbies'); } catch (e) { LB.opening = false; $('olList').innerHTML = '<p class="sub">Elenco non raggiungibile da qui: funziona sul sito del gioco, con la connessione attiva.</p>'; return; }
+  LB.opening = false;
+  if ($('vOnline').classList.contains('hidden')) return closeLobbyList();
+  LB.net.onPeers(l => { LB.list = l; renderLobbyList(); });
+  setTimeout(renderLobbyList, 2500);
+}
+function closeLobbyList() { try { LB.net && LB.net.close(); } catch (e) {} LB.net = null; LB.list = []; }
+const LVL = { facile: 'Facile', medio: 'Medio', pro: 'Pro' };
+function renderLobbyList() {
+  if (!LB.net) return;
+  const rooms = LB.list.filter(r => r && r.code && r.open && r.id !== myId).sort((a, b) => (a.n >= a.max) - (b.n >= b.max) || b.n - a.n);
+  $('olCount').textContent = rooms.length ? `· ${rooms.length}` : '';
+  if (!rooms.length) { $('olList').innerHTML = '<p class="sub">Nessuna stanza aperta in questo momento. Creane una tu: comparirà qui per tutti.</p>'; return; }
+  $('olList').innerHTML = rooms.map(r => {
+    const full = r.n >= r.max;
+    return `<div class="olrow"><span class="nm"><b>${r.pw ? '🔒 ' : ''}${esc(r.name)}</b><small>di ${esc(r.host)} · ${TRACKS[r.track] ? TRACKS[r.track].name : esc(r.track)} · ${CLASSES[r.cls] ? CLASSES[r.cls].name : ''} · ${r.laps} ${r.laps > 1 ? 'giri' : 'giro'} · ${LVL[r.mode] || ''}</small></span>`
+      + `<small style="white-space:nowrap">${r.n}/${r.max}</small>`
+      + (r.pw && !full ? `<input class="mpin" type="text" placeholder="Password" data-pw="${esc(r.code)}" autocomplete="off">` : '')
+      + `<button class="primary" data-join="${esc(r.code)}" ${full ? 'disabled' : ''}>${full ? 'Piena' : 'Entra'}</button></div>`;
+  }).join('');
+  $('olList').querySelectorAll('[data-join]').forEach(b => b.onclick = () => {
+    const code = b.dataset.join, r = rooms.find(x => x.code === code), inp = $('olList').querySelector(`[data-pw="${code}"]`);
+    if (r && r.pw && !(inp && inp.value.trim())) { if (inp) inp.focus(); $('mpMsg').textContent = 'Questa stanza ha la password: scrivila accanto a "Entra".'; return; }
+    mpOpen(code, false, inp ? inp.value : '');
+  });
+}
+// migliori giri (Supabase): piccolo riquadro nel multiplayer e nella stanza
+const recCache = {};
+async function loadRecords(boxId, track, cls) {
+  const key = track + '|' + cls, box = $(boxId); if (!box) return;
+  const draw = rows => { box.innerHTML = rows.length ? rows.slice(0, 5).map((r, i) => `<div><span>${i + 1}°</span><span>${esc(r.player)} <small style="color:#9fb0cc">· ${esc(r.setup)}</small></span><b>${fmtTime(r.time_ms / 1000)}</b></div>`).join('') : '<p class="sub">Ancora nessun tempo: il primo record può essere il tuo!</p>'; };
+  const c = recCache[key];
+  if (c && Date.now() - c.at < 20000) return draw(c.rows);
+  try { const rows = await fetchBoard(track, cls, 'lap'); recCache[key] = { at: Date.now(), rows }; draw(rows); }
+  catch (e) { box.innerHTML = '<p class="sub">Record non raggiungibili da qui.</p>'; }
 }
 
 // ---------- mosse in rete ----------
@@ -2794,7 +2889,7 @@ updateResumeBtn();
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.18';
+const GAME_VERSION = 'v0.19';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
