@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.25** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
+Versione attuale: **v0.26** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -31,7 +31,8 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - I colori delle auto restano dei piloti anche quando cambia la posizione in griglia.
 
 ## Regole di gara
-- **Uscita di pista:** testacoda, si riparte da fermi e si salta un turno.
+- **Uscita di pista:** testacoda, si riparte da fermi e si salta un turno. Il limite è il centro dell'auto a `HALF + 0,6` m dal centro pista; **sui cordoli (v0.26) 40 cm in più** (`KERB_EXTRA`): la ruota esterna può stare a cavallo tra cordolo ed erba, circa mezza ruota fuori, senza testacoda. Sui tratti senza cordolo il limite non cambia.
+- **Cordoli (v0.26):** quando l'auto ci passa sopra "martella": sobbalzi rapidi, leggera inclinazione e il brrr del cordolo (onda quadra bassa pulsata). I cordoli ci sono nelle curve (`KERB`, curvatura > 1/70).
 - **Contatto:** chi tampona si ferma dietro e perde metà della velocità; chi viene colpito perde il 30%. Le collisioni usano rettangoli orientati.
 - **Sorpasso:** conta solo quando **mezza auto ha superato il muso dell'avversaria**. Su questa regola si basano la classifica ufficiale, la scritta "SORPASSO!" e le frecce ▲▼.
 - **Scia:** chi chiude il turno subito dietro un avversario, sulla stessa linea, ha più accelerazione al turno dopo (💨).
@@ -75,7 +76,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - **Per ora si corre solo sulla Mini Monza, in tutte le modalità (v0.23):** le altre due piste si vedono con il lucchetto, grigie e con "Presto disponibile" nella gara da soli, "🔒 … · presto" nella stanza online. Si sbloccano cambiando `TRACKS_OPEN` nel codice (e le opzioni di `#lbTrack`).
 
 ## Grafica e atmosfera (stile "plastico")
-- **Auto (v0.25):** Turismo con carrozzeria a profilo estruso, passaruota, vetri, montante, livrea a strisce (scura sulle auto chiare), tondo del numero sulle porte, minigonne, specchietti, fari e fanali, griglia, splitter, estrattore, scarico, alettone; Formula 1 con muso, abitacolo, cofano con presa d'aria e pinna, pance con prese, fondo, halo, casco con visiera, ala anteriore e posteriore a due elementi con paratie, beam wing, sospensioni. Ruote con cerchio e razze (si vede che girano). I pezzi sono uniti in pochi oggetti con i colori sui vertici (`mergeCarParts`, usa `lib/addons/utils/BufferGeometryUtils.js`); alettoni e ruote restano separati perché cadono con i danni (oltre il 50%) e girano.
+- **Auto (v0.25):** Turismo con carrozzeria a profilo estruso, passaruota, vetri, montante, livrea a strisce (scura sulle auto chiare), tondo del numero sulle porte, minigonne, specchietti, fari e fanali, griglia, splitter, estrattore, scarico, alettone; Formula 1 con muso, abitacolo, cofano con presa d'aria e pinna, pance con prese, fondo, halo, casco con visiera, ala anteriore e posteriore a due elementi con paratie, beam wing, sospensioni. Ruote con cerchio e razze (si vede che girano). **v0.26:** numero di gara vero sulle porte (Turismo) e su cofano motore e muso (F1), legato al colore del pilota: rosso 7, blu 22, giallo 12, verde 5, arancione 31, viola 18, turchese 44, rosa 9; quattro livree a seconda del numero (strisce centrali, fascia laterale con tetto a contrasto, doppie strisce, tetto e cofano a contrasto); Turismo con vetri trasparenti e pilota dentro (casco, tuta, sedile, volante); casco F1 nel colore del pilota schiarito, con banda bianca. I pezzi sono uniti in pochi oggetti con i colori sui vertici (`mergeCarParts`, usa `lib/addons/utils/BufferGeometryUtils.js`); alettoni e ruote restano separati perché cadono con i danni (oltre il 50%) e girano.
 - Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi. **Niente deve sporgere dal bordo del plastico** (regola di Christian): alberi, rocce e oggetti stanno dentro la base, con margine per la chioma.
 - Muretti con striscioni, reti, gomme rosse e bianche, ghiaia, tribune coperte, box con tetto arancione e torre, postazioni dei commissari con il commissario e la bandiera.
 - Case, palazzi, strada perimetrale, parcheggi, torri faro, mongolfiere, folla animata che esulta.
@@ -142,6 +143,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.26:** numeri di gara, livree, pilota visibile, casco colorato; cordoli che vibrano con il suono e 40 cm di margine in più prima del testacoda.
 - **v0.25:** auto rifatte (Turismo e Formula 1 più dettagliate, pezzi uniti per non rallentare).
 - **v0.24:** musica, folla e nuovi effetti sonori; 5 lingue.
 - **v0.23:** solo Mini Monza in tutte le modalità (altre piste con il lucchetto); Ultra Pro verificato online.
