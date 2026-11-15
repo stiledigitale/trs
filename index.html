@@ -207,7 +207,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.22</div>
+    <div class="ver">Prototipo v0.22.1</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -1762,9 +1762,10 @@ function applyResult(c, r) {
   c.x = r.end.x; c.z = r.end.z; c.a = r.end.a; c.idx = r.end.idx; c.v = r.speed;
   c.progress += r.gain;
   c.mesh.position.set(c.x, 0.05, c.z); c.mesh.rotation.y = -c.a;
-  for (const p of r.pts) c.trail.push(new THREE.Vector3(p.x, 0.22, p.z));
+  // scia colorata: resta per tutta la gara (un punto ogni 4 della traiettoria, basta per una linea morbida)
+  r.pts.forEach((p, i) => { if (i % 4 === 0 || i === r.pts.length - 1) c.trail.push(new THREE.Vector3(p.x, 0.22, p.z)); });
   if (r.status === 'off') c.trail.push(new THREE.Vector3(c.x, 0.22, c.z));
-  if (c.trail.length > 400) c.trail.splice(0, c.trail.length - 400);
+  if (c.trail.length > 12000) c.trail.splice(0, c.trail.length - 12000);
   c.trailLine.geometry.dispose(); c.trailLine.geometry = new THREE.BufferGeometry().setFromPoints(c.trail);
   const tag = `<b style="color:${c.color}">${c.name}</b>`;
   if (r.status === 'off') { c.skip = 1; log(`${tag} esce di pista: testacoda! Riparte da fermo e salta un turno.`); }
@@ -3088,7 +3089,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.22';
+const GAME_VERSION = 'v0.22.1';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {

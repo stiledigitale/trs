@@ -10,6 +10,7 @@ Corse automobilistiche **a turni**, 3D low poly in stile "plastico", di Stile Di
 Il codice è pronto per i portali: tutto incluso nel pacchetto e un **adattatore** unico (`const Portal` in `index.html`) con le funzioni che i portali chiedono: caricamento finito, inizio/fine partita, pubblicità tra le gare, nome del giocatore. Sul sito non fanno niente; per ogni portale si riempiono solo quelle. Il portale si sceglie con `?portal=nome` o `window.TRS_PORTAL`. L'unico servizio esterno è Supabase, disattivabile con `Portal.online = false`.
 
 ## Versioni
+- **v0.22.1** – la scia colorata di ogni auto resta per tutta la gara (prima si cancellava dopo circa 10 mosse).
 - **v0.22** – nuovo livello Ultra Pro: regole del Pro (nessun avviso, ritiro con danni gravi) con solo 5 secondi a mossa, anche in hot-seat e online; in classifica online conta come Pro.
 - **v0.21.1** – alberi, cespugli e oggetti sempre dentro la base del plastico: niente più chiome che sporgono dal bordo.
 - **v0.21** – partenza: griglia in ordine, casuale o qualifica con giro lanciato (anche online, tutti insieme); commissari con bandiera gialla (uscite e contatti) e blu (doppiaggi); multiplayer diviso in "Gioca con gli amici" (codice di invito) e "Stanze online" (pubbliche e private con password); chi si disconnette va fuori pista e si ritira al suo turno.
