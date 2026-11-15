@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tactical Racing Simulator — prototipo</title>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  @font-face{font-family:Rubik;font-style:normal;font-weight:400;font-display:swap;src:url(fonts/rubik-latin-400-normal.woff2) format('woff2')}
+  @font-face{font-family:Rubik;font-style:normal;font-weight:600;font-display:swap;src:url(fonts/rubik-latin-600-normal.woff2) format('woff2')}
+  @font-face{font-family:Rubik;font-style:normal;font-weight:800;font-display:swap;src:url(fonts/rubik-latin-800-normal.woff2) format('woff2')}
+  @font-face{font-family:Rubik;font-style:normal;font-weight:900;font-display:swap;src:url(fonts/rubik-latin-900-normal.woff2) format('woff2')}
+</style>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;background:#cfeaf7;font-family:Rubik,system-ui,sans-serif;color:#f4f6fb}
@@ -96,7 +101,7 @@
   @media (max-width:900px){#log{display:none}#rank{width:170px}#minimap{width:142px;height:106px}#hud{width:220px;font-size:12.5px}#hint{display:none}.prow{grid-template-columns:22px 16px 1fr 84px 96px}}
 </style>
 <script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+{"imports":{"three":"./lib/three.module.min.js","three/addons/":"./lib/addons/"}}
 </script>
 </head>
 <body>
@@ -150,7 +155,7 @@
     <button class="big" data-opt>Opzioni <small>grafica, CPU, camera</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.14</div>
+    <div class="ver">Prototipo v0.15</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -346,7 +351,7 @@ function applyOptions() {
   for (const c of cars) { c.trailLine.visible = OPT.trails; c.label.visible = OPT.labels; }
   $('minimap').classList.toggle('hidden', !OPT.minimap);
   updateCamBtn();
-  if (SND.master) SND.master.gain.value = OPT.audio ? 0.55 : 0;
+  if (SND.master) SND.master.gain.value = (OPT.audio && !adMuted) ? 0.55 : 0;
   try { localStorage.setItem('cpc-opzioni', JSON.stringify(OPT)); } catch (e) {}
 }
 
@@ -1545,6 +1550,7 @@ function startGame(cfg) {
   startSequence();
 }
 function toMainMenu() {
+  Portal.gameplayStop();
   token++; paused = false; if (RP) { RP = null; $('replayUI').classList.add('hidden'); controls.enabled = true; } $('lights').classList.add('hidden'); engineSet(0, false);
   phase = 'menu'; aimGroup.visible = false;
   clearCars(); showGameUI(false);
@@ -1673,6 +1679,7 @@ function checkGameOver() {
   $('endSub').textContent = `${TRACKS[trackKey].name} · ${laps} ${laps > 1 ? 'giri' : 'giro'} · livello ${mode}`;
   $('endList').innerHTML = ranked.map((c, i) => `<div class="res"><span class="p">${i + 1}°</span><span class="dot" style="background:${c.color}"></span><span style="flex:1">${c.name} <small style="color:#9fb0cc">· ${c.preset}${c.human ? '' : ' · CPU'}</small><br><small style="color:#9fb0cc">miglior giro ${fmtTime(c.best)}${c.best === fastest ? ' 🟣' : ''}</small></span><span style="font-size:14px;text-align:right">${c.out ? '<span style="color:#ff9aa4">ritirato</span>' : c.finished ? (c === lead ? fmtTime(c.finishTime) : '+' + (c.finishTime - lead.finishTime).toFixed(2) + ' s') : '<span style="color:#9fb0cc">giro ' + Math.min(laps, Math.floor(c.progress / N) + 1) + '</span>'}</span></div>`).join('');
   $('endScreen').classList.remove('hidden');
+  Portal.gameplayStop();
   sendOnlineTimes();
   return true;
 }
@@ -1881,7 +1888,7 @@ function startSequence() {
   for (let k = 0; k < 5; k++) later(() => { lts[k].classList.add('on'); sfx.beep(); $('lightsTxt').textContent = 'Attenzione…'; }, 1000 + k * 800);
   later(() => {
     lts.forEach(e => e.classList.remove('on')); $('lightsTxt').textContent = 'VIA!'; sfx.go(); sfx.cheer(1.3);
-    banner('VIA!', '#7dffb1'); later(() => L.classList.add('hidden'), 800);
+    banner('VIA!', '#7dffb1'); later(() => L.classList.add('hidden'), 800); Portal.gameplayStart();
     nextRound();
   }, 1000 + 4 * 800 + 500 + Math.random() * 1000);
 }
@@ -2292,7 +2299,7 @@ function renderClass() {
 $('classSel').onchange = renderClass; renderClass();
 $('startBtn').onclick = () => {
   const players = [...playersEl.children].filter(r => r.querySelector('input[type=checkbox]').checked).map(r => ({ name: r.querySelector('input[type=text]').value.trim(), type: r.querySelector('.t').value, car: r.querySelector('.c').value }));
-  startGame({ players, laps: +$('lapsSel').value, track: selTrack, mode: $('modeSel').value, wear: $('wearSel').value, cls: $('classSel').value });
+  launchRace({ players, laps: +$('lapsSel').value, track: selTrack, mode: $('modeSel').value, wear: $('wearSel').value, cls: $('classSel').value });
 };
 
 // opzioni
@@ -2308,13 +2315,13 @@ function renderOptions() {
 $('optClose').onclick = () => $('optOverlay').classList.add('hidden');
 
 // pausa / fine
-function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = on; $('pause').classList.toggle('hidden', !on); }
+function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = on; $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
 $('pauseBtn').onclick = () => setPause(true);
 $('resumeBtn').onclick = () => setPause(false);
-$('restartBtn').onclick = () => startGame(lastCfg);
+$('restartBtn').onclick = () => launchRace(lastCfg);
 $('pauseOptBtn').onclick = () => $('optOverlay').classList.remove('hidden');
 $('quitBtn').onclick = toMainMenu;
-$('againBtn').onclick = () => startGame(lastCfg);
+$('againBtn').onclick = () => launchRace(lastCfg);
 $('replayBtn').onclick = () => { if (!history.length) return; $('endScreen').classList.add('hidden'); const win = positions()[0]; startReplay(history.filter(h => h.moves.length), { mode: 'full', speed: 1, focus: win, onEnd: () => { phase = 'over'; $('endScreen').classList.remove('hidden'); } }); };
 $('rpPause').onclick = () => { if (RP) { RP.paused = !RP.paused; updateReplayUI(); } };
 $('rpSpeed').onclick = () => { if (RP) { RP.speed = RP.speed >= 4 ? 1 : RP.speed * 2; updateReplayUI(); } };
@@ -2373,13 +2380,67 @@ addEventListener('keydown', e => {
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
 
+
+/* ================== ADATTATORE PORTALI WEB ==================
+   Unico punto da adattare per ogni portale (Poki, CrazyGames, GamePix…).
+   Il portale si sceglie con ?portal=nome nell'indirizzo oppure con window.TRS_PORTAL prima del gioco.
+   Sul sito (portal = 'web') tutte le funzioni non fanno niente. */
+const Portal = {
+  name: new URLSearchParams(location.search).get('portal') || window.TRS_PORTAL || 'web',
+  online: true,        // classifica e multiplayer (Supabase): da mettere a false se un portale non li approva
+  playing: false,
+  async init() {
+    // qui si carica e si inizializza l'SDK del portale (es. PokiSDK.init(), CrazyGames.SDK.init())
+  },
+  loadingFinished() {
+    // il gioco ha finito di caricare ed è al menu (es. PokiSDK.gameLoadingFinished(), CrazyGames.SDK.game.loadingStop())
+  },
+  gameplayStart() {
+    if (this.playing) return; this.playing = true;
+    // il giocatore sta giocando (es. PokiSDK.gameplayStart(), CrazyGames.SDK.game.gameplayStart())
+  },
+  gameplayStop() {
+    if (!this.playing) return; this.playing = false;
+    // pausa, menu o fine gara (es. PokiSDK.gameplayStop(), CrazyGames.SDK.game.gameplayStop())
+  },
+  async commercialBreak() {
+    // pubblicità tra una gara e l'altra (es. await PokiSDK.commercialBreak(), CrazyGames.SDK.ad.requestAd('midgame'))
+  },
+  playerName() {
+    return null;         // nome del giocatore dall'account del portale, se c'è (es. CrazyGames.SDK.user)
+  },
+};
+// audio spento durante pubblicità e quando la scheda è nascosta
+let adMuted = false;
+function setGameMuted(on) {
+  adMuted = on;
+  if (SND.master) SND.master.gain.value = (OPT.audio && !on) ? 0.55 : 0;
+  if (SND.ctx) { if (on) SND.ctx.suspend().catch(() => {}); else if (OPT.audio) SND.ctx.resume().catch(() => {}); }
+}
+let racesStarted = 0;
+async function launchRace(cfg) {
+  if (racesStarted++ > 0) {   // la prima gara parte subito, dalla seconda c'è la pubblicità del portale
+    setGameMuted(true);
+    try { await Portal.commercialBreak(); } catch (e) {} finally { setGameMuted(false); }
+  }
+  startGame(cfg);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { setGameMuted(true); if (phase !== 'menu' && phase !== 'over' && !paused) setPause(true); }
+  else setGameMuted(false);
+});
+// frecce e spazio non devono far scorrere la pagina del portale; niente menu del tasto destro sul gioco
+addEventListener('keydown', e => { if ([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') e.preventDefault(); }, { passive: false });
+addEventListener('contextmenu', e => { if (e.target === renderer.domElement) e.preventDefault(); });
+
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.14';
+const GAME_VERSION = 'v0.15';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
+  if (!Portal.online) throw new Error('online disattivato');
   const r = await fetch(`${SB_URL}/rest/v1/trs_lap_records?${query}`, { headers: sbHeaders() });
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
@@ -2414,7 +2475,7 @@ async function loadLeaderboard() {
 $('rkReload').onclick = loadLeaderboard;
 // a fine gara: miglior giro e tempo totale dei piloti umani
 async function sendOnlineTimes() {
-  if (onlineSent || !OPT.online) return; onlineSent = true;
+  if (onlineSent || !OPT.online || !Portal.online) return; onlineSent = true;
   const rows = [];
   for (const c of cars.filter(c => c.human && c.name.trim())) {
     const base = { player: c.name.trim().slice(0, 13), track: trackKey, car_class: raceClass, setup: c.preset, level: mode, version: GAME_VERSION };
@@ -2440,6 +2501,7 @@ async function sendOnlineTimes() {
 /* ================== AVVIO & LOOP ================== */
 buildWorld('monza');
 renderTrackCards(); renderOptions(); applyOptions();
+Portal.init().then(() => { const n = Portal.playerName(); if (n) { const inp = playersEl.children[0].querySelector('input[type=text]'); inp.value = n.slice(0, 13); } Portal.loadingFinished(); });
 
 let lastT = performance.now();
 renderer.setAnimationLoop(now => {

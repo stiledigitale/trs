@@ -2,10 +2,14 @@
 
 Corse automobilistiche **a turni**, 3D low poly in stile "plastico", di Stile Digitale.
 
-- Un unico file: `index.html` (Three.js 0.160 da CDN, nessun build, audio sintetizzato).
+- `index.html` è il gioco; `lib/` contiene Three.js 0.160 e `fonts/` il font Rubik: tutto incluso, nessuna richiesta a CDN esterni (requisito dei portali web). Nessun build, audio sintetizzato.
 - Si apre in qualsiasi browser; pubblicato su Cloudflare Pages.
 - Classifica online e multiplayer: Supabase (progetto `stiledigitale_games`, tabelle con prefisso `trs_`).
 
+## Portali web
+Il codice è pronto per i portali: tutto incluso nel pacchetto e un **adattatore** unico (`const Portal` in `index.html`) con le funzioni che i portali chiedono: caricamento finito, inizio/fine partita, pubblicità tra le gare, nome del giocatore. Sul sito non fanno niente; per ogni portale si riempiono solo quelle. Il portale si sceglie con `?portal=nome` o `window.TRS_PORTAL`. L'unico servizio esterno è Supabase, disattivabile con `Portal.online = false`.
+
 ## Versioni
+- **v0.15** – pronto per i portali: Three.js e font inclusi, adattatore portale, pausa e audio muto con la scheda nascosta o durante le pubblicità, frecce/spazio senza scorrimento della pagina.
 - **v0.14** – classifica online (Supabase): miglior giro e gara completa per pista e classe, invio automatico a fine gara.
 - **v0.13** – replay dei giocatori sempre visibili, tasto "Salta replay", regia TV sulle torrette, "CPU sta pensando…".
