@@ -7,4 +7,5 @@ Corse automobilistiche **a turni**, 3D low poly in stile "plastico", di Stile Di
 - Classifica online e multiplayer: Supabase (progetto `stiledigitale_games`, tabelle con prefisso `trs_`).
 
 ## Versioni
+- **v0.14** – classifica online (Supabase): miglior giro e gara completa per pista e classe, invio automatico a fine gara.
 - **v0.13** – replay dei giocatori sempre visibili, tasto "Salta replay", regia TV sulle torrette, "CPU sta pensando…".

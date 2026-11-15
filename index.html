@@ -148,8 +148,9 @@
     <div class="tag">Corse automobilistiche a turni · 3D low poly</div>
     <button class="big primary" data-go="vSetup">Gioca <small>gara rapida</small></button>
     <button class="big" data-opt>Opzioni <small>grafica, CPU, camera</small></button>
+    <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.13 · gioco in locale</div>
+    <div class="ver">Prototipo v0.14</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -164,6 +165,19 @@
       <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso + 15 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
       <button class="primary" id="startBtn" style="font-size:16px;padding:12px 26px">Via!</button></div>
     </div>
+  </div>
+
+  <div id="vRank" class="card hidden">
+    <h2>Classifica <span>online</span></h2>
+    <p class="sub">I tempi dei piloti umani vengono inviati da soli a fine gara. Un tempo per pilota: il suo migliore.</p>
+    <div class="foot" style="justify-content:flex-start;margin-top:12px">
+      <label>Pista <select id="rkTrack"><option value="monza">Mini Monza</option><option value="prova">Anello di prova</option><option value="dolomiti">Valle delle Dolomiti</option></select></label>
+      <label>Classe <select id="rkClass"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label>
+      <label>Tempo <select id="rkKind"><option value="lap">Miglior giro</option><option value="race">Gara completa</option></select></label>
+      <label id="rkLapsBox" class="hidden">Giri <select id="rkLaps"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+    </div>
+    <div id="rkList" style="margin-top:14px;min-height:120px"></div>
+    <div class="foot"><button data-go="vMain">← Indietro</button><button id="rkReload">↻ Aggiorna</button></div>
   </div>
 
   <div id="vHelp" class="card hidden">
@@ -274,7 +288,7 @@ const SPONSORS = [['GOMME ROSSI', '#e63946', '#fff'], ['PIZZA TURBO', '#f4b400',
   ['BIRRA DEL BOX', '#2a9d4a', '#fff'], ['ZA srl', '#1d2430', '#f4b400'], ['FRENI LAMPO', '#ffffff', '#e63946'], ['GELATI PITLANE', '#ff7fb0', '#fff'], ['RADIO GIRO', '#8e44ad', '#fff']];
 
 /* ================== OPZIONI ================== */
-const OPT = { audio: true, replays: true, quality: 'alta', shadows: true, anim: 'normale', cpu: 'normale', autocam: true, camMode: 'turni', trails: true, labels: true, minimap: true };
+const OPT = { online: true, audio: true, replays: true, quality: 'alta', shadows: true, anim: 'normale', cpu: 'normale', autocam: true, camMode: 'turni', trails: true, labels: true, minimap: true };
 try { Object.assign(OPT, JSON.parse(localStorage.getItem('cpc-opzioni') || '{}')); } catch (e) {}
 const OPT_DEF = [
   { k: 'audio', label: 'Suoni', vals: [[true, 'Sì'], [false, 'No']] },
@@ -288,6 +302,7 @@ const OPT_DEF = [
   { k: 'trails', label: 'Scie delle auto', vals: [[true, 'Sì'], [false, 'No']] },
   { k: 'labels', label: 'Nomi sopra le auto', vals: [[true, 'Sì'], [false, 'No']] },
   { k: 'minimap', label: 'Minimappa', vals: [[true, 'Sì'], [false, 'No']] },
+  { k: 'online', label: 'Invia i tempi alla classifica online', vals: [[true, 'Sì'], [false, 'No']] },
 ];
 const animF = () => ({ lenta: 1.5, normale: 1, veloce: 0.45 })[OPT.anim];
 
@@ -1499,7 +1514,7 @@ function clearCars() { for (const c of cars) { scene.remove(c.mesh, c.trailLine)
 function showGameUI(on) { ['hud', 'rank', 'controls', 'log'].forEach(id => $(id).classList.toggle('hidden', !on)); }
 
 function startGame(cfg) {
-  lastCfg = cfg; token++; paused = false; camInit = true;
+  lastCfg = cfg; token++; paused = false; camInit = true; onlineSent = false;
   if (RP) { RP = null; $('replayUI').classList.add('hidden'); controls.enabled = true; }
   ['pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
   if (trackKey !== cfg.track) buildWorld(cfg.track);
@@ -1658,6 +1673,7 @@ function checkGameOver() {
   $('endSub').textContent = `${TRACKS[trackKey].name} · ${laps} ${laps > 1 ? 'giri' : 'giro'} · livello ${mode}`;
   $('endList').innerHTML = ranked.map((c, i) => `<div class="res"><span class="p">${i + 1}°</span><span class="dot" style="background:${c.color}"></span><span style="flex:1">${c.name} <small style="color:#9fb0cc">· ${c.preset}${c.human ? '' : ' · CPU'}</small><br><small style="color:#9fb0cc">miglior giro ${fmtTime(c.best)}${c.best === fastest ? ' 🟣' : ''}</small></span><span style="font-size:14px;text-align:right">${c.out ? '<span style="color:#ff9aa4">ritirato</span>' : c.finished ? (c === lead ? fmtTime(c.finishTime) : '+' + (c.finishTime - lead.finishTime).toFixed(2) + ' s') : '<span style="color:#9fb0cc">giro ' + Math.min(laps, Math.floor(c.progress / N) + 1) + '</span>'}</span></div>`).join('');
   $('endScreen').classList.remove('hidden');
+  sendOnlineTimes();
   return true;
 }
 
@@ -2233,7 +2249,8 @@ function updateRank() {
 
 // viste del menu
 function showView(id) {
-  ['vMain', 'vSetup', 'vHelp'].forEach(v => $(v).classList.toggle('hidden', v !== id));
+  ['vMain', 'vSetup', 'vHelp', 'vRank'].forEach(v => $(v).classList.toggle('hidden', v !== id));
+  if (id === 'vRank') loadLeaderboard();
   $('menu').classList.toggle('dim', id !== 'vMain');
 }
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => showView(b.dataset.go));
@@ -2354,6 +2371,71 @@ addEventListener('keydown', e => {
   e.preventDefault(); updateAim();
 });
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+
+/* ================== CLASSIFICA ONLINE (Supabase) ================== */
+// progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
+const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
+const GAME_VERSION = 'v0.14';
+const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
+let onlineSent = false;
+async function sbGet(query) {
+  const r = await fetch(`${SB_URL}/rest/v1/trs_lap_records?${query}`, { headers: sbHeaders() });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+async function sbInsert(rows) {
+  const r = await fetch(`${SB_URL}/rest/v1/trs_lap_records`, { method: 'POST', headers: sbHeaders({ Prefer: 'return=minimal' }), body: JSON.stringify(rows) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+// migliori tempi, uno per pilota
+async function fetchBoard(track, cls, kind, nLaps) {
+  let q = `select=player,setup,level,time_ms,created_at&track=eq.${track}&car_class=eq.${cls}&kind=eq.${kind}&order=time_ms.asc&limit=300`;
+  if (kind === 'race') q += `&laps=eq.${nLaps}`;
+  const rows = await sbGet(q), seen = new Set(), out = [];
+  for (const r of rows) { const k = r.player.trim().toLowerCase(); if (seen.has(k)) continue; seen.add(k); out.push(r); if (out.length >= 20) break; }
+  return out;
+}
+const esc = t => String(t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
+const LEVEL_LBL = { facile: 'Facile', medio: 'Medio', pro: 'Pro' };
+async function loadLeaderboard() {
+  const box = $('rkList'), track = $('rkTrack').value, cls = $('rkClass').value, kind = $('rkKind').value, nl = +$('rkLaps').value;
+  $('rkLapsBox').classList.toggle('hidden', kind !== 'race');
+  box.innerHTML = '<p class="sub">Carico la classifica…</p>';
+  try {
+    const rows = await fetchBoard(track, cls, kind, nl);
+    if (!rows.length) { box.innerHTML = '<p class="sub">Ancora nessun tempo qui. Il primo potrebbe essere il tuo!</p>'; return; }
+    box.innerHTML = rows.map((r, i) => `<div class="res"><span class="p">${i + 1}°</span><span style="flex:1">${esc(r.player)} <small style="color:#9fb0cc">· ${esc(r.setup)} · ${LEVEL_LBL[r.level] || esc(r.level)}</small><br><small style="color:#9fb0cc">${new Date(r.created_at).toLocaleDateString('it-IT')}</small></span><b>${fmtTime(r.time_ms / 1000)}</b></div>`).join('');
+  } catch (e) {
+    box.innerHTML = '<p class="sub">Classifica non raggiungibile da qui. Funziona sul sito del gioco, con la connessione attiva.</p>';
+  }
+}
+['rkTrack', 'rkClass', 'rkKind', 'rkLaps'].forEach(id => $(id).onchange = loadLeaderboard);
+$('rkReload').onclick = loadLeaderboard;
+// a fine gara: miglior giro e tempo totale dei piloti umani
+async function sendOnlineTimes() {
+  if (onlineSent || !OPT.online) return; onlineSent = true;
+  const rows = [];
+  for (const c of cars.filter(c => c.human && c.name.trim())) {
+    const base = { player: c.name.trim().slice(0, 13), track: trackKey, car_class: raceClass, setup: c.preset, level: mode, version: GAME_VERSION };
+    if (c.best != null) rows.push({ ...base, kind: 'lap', laps: laps, time_ms: Math.round(c.best * 1000) });
+    if (c.finished && c.finishTime != null) rows.push({ ...base, kind: 'race', laps: laps, time_ms: Math.round(c.finishTime * 1000) });
+  }
+  if (!rows.length) return;
+  const note = document.createElement('p'); note.className = 'sub'; note.id = 'onlineNote'; note.textContent = 'Invio dei tempi alla classifica online…';
+  $('onlineNote')?.remove(); $('endList').after(note);
+  try {
+    await sbInsert(rows);
+    const lapRows = rows.filter(r => r.kind === 'lap'), parts = [];
+    if (lapRows.length) {
+      const board = await fetchBoard(trackKey, raceClass, 'lap');
+      for (const r of lapRows) { const i = board.findIndex(b => b.player.trim().toLowerCase() === r.player.toLowerCase() && b.time_ms === r.time_ms); parts.push(i >= 0 ? `${r.player}: ${i + 1}° posto in classifica con ${fmtTime(r.time_ms / 1000)}` : `${r.player}: ${fmtTime(r.time_ms / 1000)} (fuori dalla top 20)`); }
+    }
+    note.textContent = '🌐 Tempi inviati alla classifica online. ' + parts.join(' · ');
+  } catch (e) {
+    note.textContent = 'Classifica online non raggiungibile: i tempi di questa gara non sono stati inviati.';
+  }
+}
 
 /* ================== AVVIO & LOOP ================== */
 buildWorld('monza');
