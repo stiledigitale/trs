@@ -209,7 +209,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.26</div>
+    <div class="ver">Prototipo v0.26.1</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -1490,11 +1490,11 @@ function makeCar(color, num = 1) {
   }
   add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.62, 1.66), body), -0.28, 1.44, 0);   // montante centrale
   add(new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.06, 1.56), dark), -0.3, 1.13, 0);     // pavimento dell'abitacolo
-  add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.62, 0.52), dark), -0.62, 1.42, 0.32);   // sedile
-  add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.3, 0.5), carMat(0x2b3240)), -0.38, 1.3, 0.32);   // tuta del pilota
-  add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.2, 1), stripe === body ? carMat(0xf4f6f8) : stripe), -0.36, 1.58, 0.32);   // casco
-  add(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.3), carMat(0x10141c)), -0.2, 1.6, 0.32);   // visiera
-  add(new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.03, 4, 10), dark), 0.12, 1.42, 0.32).rotation.y = Math.PI / 2;   // volante
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.62, 0.52), dark), -0.62, 1.42, -0.32);   // sedile
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.3, 0.5), carMat(0x2b3240)), -0.38, 1.3, -0.32);   // tuta del pilota
+  add(new THREE.Mesh(new THREE.IcosahedronGeometry(0.2, 1), stripe === body ? carMat(0xf4f6f8) : stripe), -0.36, 1.58, -0.32);   // casco
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.3), carMat(0x10141c)), -0.2, 1.6, -0.32);   // visiera
+  add(new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.03, 4, 10), dark), 0.12, 1.42, -0.32).rotation.y = Math.PI / 2;   // volante
   const glassT = new THREE.MeshStandardMaterial({ color: 0x24344a, roughness: 0.1, metalness: 0.3, transparent: true, opacity: 0.42, depthWrite: false, flatShading: true });
   const gl = carProfile([[1.1, 1.11], [0.4, 1.7], [-1.0, 1.75], [-1.68, 1.1], [-1.4, 1.1], [0.9, 1.1]], 1.7, glassT); gl.castShadow = false; g.add(gl);
   // livrea (4 tipi, a seconda del numero): strisce centrali, fascia laterale e tetto a contrasto, doppie strisce, tetto e cofano a contrasto
@@ -3386,7 +3386,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.26';
+const GAME_VERSION = 'v0.26.1';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
