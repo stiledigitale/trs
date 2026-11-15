@@ -203,10 +203,11 @@
     <button class="big primary hidden" id="resumeSaved">Riprendi la partita <small id="resumeInfo"></small></button>
     <button class="big primary" data-go="vSetup">Gioca <small>gara rapida</small></button>
     <button class="big" data-opt>Opzioni <small>grafica, CPU, camera</small></button>
-    <button class="big" data-go="vOnline">Multiplayer online <small>con gli amici</small></button>
+    <button class="big" data-go="vFriends">Gioca con gli amici <small>con il codice di invito</small></button>
+    <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.20</div>
+    <div class="ver">Prototipo v0.21</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -218,26 +219,37 @@
     <div class="stats" id="statsHelp"></div>
     <div class="foot">
       <button data-go="vMain">← Indietro</button>
-      <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso (né uscite né contatti) + 15 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+      <div class="r"><label>Classe <select id="classSel"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label><label>Livello <select id="modeSel"><option value="facile">Facile · traiettoria segnalata</option><option value="medio">Medio · nessun avviso uscita</option><option value="pro">Pro · nessun avviso (né uscite né contatti) + 15 s a turno</option></select></label><label>Usura e consumi <select id="wearSel"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label><label>Partenza <select id="gridSel"><option value="ordine">Griglia in ordine</option><option value="casuale">Griglia casuale</option><option value="quali">Qualifica (giro lanciato)</option></select></label><label>Giri <select id="lapsSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
       <button class="primary" id="startBtn" style="font-size:16px;padding:12px 26px">Via!</button></div>
     </div>
   </div>
 
+  <div id="vFriends" class="card hidden">
+    <h2>Gioca con gli <span>amici</span></h2>
+    <p class="sub">Crea una stanza e manda il codice agli amici: entra solo chi lo ha. La stanza non compare nell'elenco delle stanze online.</p>
+    <h4>Il tuo nome</h4>
+    <input id="frName" type="text" maxlength="13" class="mpin" placeholder="Il tuo nome">
+    <div class="mprow">
+      <div class="mpbox"><h4 style="margin-top:0">Nuova stanza</h4><button class="primary" id="frCreate" style="width:100%">Crea la stanza e ricevi il codice</button></div>
+      <div class="mpbox"><h4 style="margin-top:0">Hai un codice?</h4><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="frCode" type="text" maxlength="5" placeholder="ABCDE" class="mpin" style="text-transform:uppercase;letter-spacing:.2em;width:130px"><button class="primary" id="frJoin">Entra</button></div></div>
+    </div>
+    <p class="sub" id="frMsg" style="margin-top:12px"></p>
+    <div class="foot"><button data-go="vMain">← Indietro</button></div>
+  </div>
+
   <div id="vOnline" class="card hidden">
-    <h2>Multiplayer <span>online</span></h2>
-    <p class="sub">Gioca con gli amici, ognuno dal suo computer o telefono: uno crea la stanza, gli altri entrano con il codice.</p>
+    <h2>Stanze <span>online</span></h2>
+    <p class="sub">Entra in una stanza aperta o creane una: le stanze pubbliche sono aperte a tutti, quelle private hanno la password 🔒.</p>
     <h4>Il tuo nome</h4>
     <input id="mpName" type="text" maxlength="13" class="mpin" placeholder="Il tuo nome">
     <div class="mpbox" style="margin-top:14px"><h4 style="margin-top:0">Stanze aperte <small id="olCount" style="text-transform:none;letter-spacing:0;font-weight:400"></small></h4><div id="olList" class="ollist"><p class="sub">Cerco le stanze…</p></div></div>
     <div class="mprow">
       <div class="mpbox"><h4 style="margin-top:0">Nuova stanza</h4>
         <input id="mpRoomName" type="text" maxlength="24" class="mpin" placeholder="Nome della stanza" style="width:100%">
-        <div class="mpopts"><label>Stanza <select id="mpPublic"><option value="1">Pubblica (in elenco)</option><option value="0">Privata (solo codice)</option></select></label><label>Posti <select id="mpSeats"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label></div>
-        <input id="mpPass" type="text" maxlength="20" class="mpin" placeholder="Password (facoltativa)" style="width:100%;margin-top:8px" autocomplete="off">
+        <div class="mpopts"><label>Posti <select id="mpSeats"><option value="2">2</option><option value="3">3</option><option value="4" selected>4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option></select></label></div>
+        <input id="mpPass" type="text" maxlength="20" class="mpin" placeholder="Password: vuota = pubblica, con password = privata 🔒" style="width:100%;margin-top:8px" autocomplete="off">
         <button class="primary" id="mpCreate" style="margin-top:10px;width:100%">Crea la stanza</button></div>
-      <div class="mpbox"><h4 style="margin-top:0">Hai un codice?</h4><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="mpCode" type="text" maxlength="5" placeholder="ABCDE" class="mpin" style="text-transform:uppercase;letter-spacing:.2em;width:130px"><button class="primary" id="mpJoin">Entra</button></div>
-        <input id="mpCodePass" type="text" maxlength="20" class="mpin" placeholder="Password, se la stanza ce l'ha" style="width:100%;margin-top:8px" autocomplete="off">
-        <h4>Migliori giri · Mini Monza</h4><div id="olRecords" class="olrec"><p class="sub">Carico…</p></div></div>
+      <div class="mpbox"><h4 style="margin-top:0">Migliori giri · Mini Monza</h4><div id="olRecords" class="olrec"><p class="sub">Carico…</p></div></div>
     </div>
     <p class="sub" id="mpMsg" style="margin-top:12px"></p>
     <div class="foot"><button data-go="vMain">← Indietro</button></div>
@@ -255,6 +267,7 @@
       <label>Giri <select id="lbLaps"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option></select></label>
       <label>Livello <select id="lbMode"><option value="facile">Facile</option><option value="medio">Medio</option><option value="pro">Pro</option></select></label>
       <label>Usura <select id="lbWear"><option value="off">Off</option><option value="realistica" selected>Realistica</option><option value="accelerata">Accelerata ×2,5</option></select></label>
+      <label>Partenza <select id="lbGrid"><option value="ordine">Griglia in ordine</option><option value="casuale">Griglia casuale</option><option value="quali">Qualifica (giro lanciato)</option></select></label>
       <label>Auto CPU <select id="lbCpu"><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></label>
     </div>
     <p class="sub" id="lbNote" style="margin-top:10px"></p>
@@ -309,6 +322,16 @@
       <button id="saveQuitBtn">💾 Salva ed esci</button>
       <button id="quitBtn">Menu principale</button>
     </div>
+  </div>
+</div>
+
+<!-- QUALIFICA -->
+<div id="qualiScreen" class="overlay hidden">
+  <div class="card" style="width:min(520px,94vw)">
+    <h2>Qualifica <span>giro lanciato</span></h2>
+    <p class="sub" id="qSub"></p>
+    <div id="qList" style="margin-top:12px"></div>
+    <div class="foot"><button id="qQuit">Menu principale</button><button class="primary hidden" id="qGo">Via alla gara</button></div>
   </div>
 </div>
 
@@ -450,7 +473,7 @@ function applyOptions() {
 let RL = null;
 let N = 600, S = [], K = null, trackKey = null, TRACK_LEN = 0;
 let SL = { x0: -300, x1: 300, z0: -300, z1: 300 };
-let treePts = [], losTargets = null, tvSpots = [];
+let treePts = [], losTargets = null, tvSpots = [], marshals = [];
 let world = null, obstacles = [], lakes = [], clouds = [], spinners = [], waterMats = [], pads = [], floaters = [];
 
 function nearestGlobal(x, z) {
@@ -537,7 +560,7 @@ function buildWorld(key) {
   const st = sampleTrack(T.ctrl); S = st.pts; N = S.length; TRACK_LEN = st.len;
   world = new THREE.Group(); scene.add(world);
   PIT = null;
-  obstacles = []; treePts = []; losTargets = null; lakes = []; clouds = []; spinners = []; waterMats = []; pads = []; floaters = []; crowdSets = [];
+  obstacles = []; treePts = []; losTargets = null; marshals = []; lakes = []; clouds = []; spinners = []; waterMats = []; pads = []; floaters = []; crowdSets = [];
 
   // curvatura
   const ds = TRACK_LEN / N, Kr = new Float32Array(N); K = new Float32Array(N);
@@ -842,9 +865,16 @@ function buildWorld(key) {
       const g = new THREE.Group();
       const hut = new THREE.Mesh(new THREE.BoxGeometry(1.8, 2.2, 1.8), flat(0xff7f27)); hut.position.y = 1.1; hut.castShadow = true; g.add(hut);
       const top = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.25, 2.2), flat(0xf3f4f6)); top.position.y = 2.3; g.add(top);
-      const pole = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.4, 0.1), flat(0xcccccc)); pole.position.set(0.9, 3.4, 0.9); g.add(pole);
-      const flag = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 0.04), flat(0xf4c430)); flag.position.set(1.5, 4.2, 0.9); g.add(flag);
+      // commissario in tuta arancione con la bandiera (gialla o blu) che sventola quando serve
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 1.4, 0.5), flat(0xff7f27)); body.position.set(1.4, 0.9, -sd * 1.4); body.castShadow = true; g.add(body);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), flat(0xf1c9a5)); head.position.set(1.4, 1.85, -sd * 1.4); g.add(head);
+      const pivot = new THREE.Group(); pivot.position.set(1.4, 1.6, -sd * 1.4); g.add(pivot);
+      const pole = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.4, 0.08), flat(0x8d949c)); pole.position.y = 1.2; pivot.add(pole);
+      const flagMat = new THREE.MeshStandardMaterial({ color: 0xf4c430, flatShading: true, roughness: 0.8, side: THREE.DoubleSide });
+      const flag = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.1, 0.04), flagMat); flag.position.set(0.82, 1.85, 0); pivot.add(flag);
+      pivot.visible = false;
       g.position.set(x, 0, z); g.rotation.y = -Math.atan2(s.tz, s.tx); world.add(g);
+      marshals.push({ idx: ci, pivot, mat: flagMat, until: 0, color: null });
       obstacles.push({ x, z, r: 2.5 });
     }
   }
@@ -1482,7 +1512,7 @@ function retire(c, why) {
   c.mesh.position.set(c.x, 0.05, c.z);
   c.mesh.traverse(o => { if (o.isMesh && o.material && !o.material.__fin) { o.material = o.material.clone(); o.material.__fin = true; o.material.transparent = true; o.material.opacity = 0.4; } });
   log(`⛔ <b style="color:${c.color}">${c.name}</b> si ritira: ${why}.`);
-  if (c.human) banner('RITIRATO', '#ff4757', why); else banner(`${c.name} SI RITIRA`, '#ff9aa4', why);
+  if (c.human && (!MP.active || c.owner === myId)) banner('RITIRATO', '#ff4757', why); else banner(`${c.name} SI RITIRA`, '#ff9aa4', why);
   sfx.crash();
 }
 function pitSpot(c) {
@@ -1579,7 +1609,7 @@ function buildZone(c) {
 }
 const hideOff = c => c.human && mode !== 'facile';   // Medio e Pro: niente avviso di uscita di pista
 const hideHit = c => c.human && mode === 'pro';      // Pro: niente avviso di collisione
-const turnMax = () => MP.active ? MP_TURN_SEC : PRO_SECONDS;
+const turnMax = () => (MP.active || QUALI.timed) ? MP_TURN_SEC : PRO_SECONDS;
 function updateAim() {
   const c = cur(); if (!c) return;
   preview = resolveMove(c, aim.d, aim.u, 40, othersOf(c));
@@ -1627,14 +1657,18 @@ function startGame(cfg, resume) {
   const s0 = S[0];
   cfg.players.forEach((p, i) => {
     const back = 7 + i * 5.5, side = (i % 2 ? -1 : 1) * 3.4, gi = ((-Math.round(back / (TRACK_LEN / N))) % N + N) % N, gs = S[gi];
-    const x = gs.x + gs.nx * side, z = gs.z + gs.nz * side;
+    let x = gs.x + gs.nx * side, z = gs.z + gs.nz * side;
     const idx = gi, pre = ALL_PRESETS[p.car] || PRESETS.bilanciata;
-    const c = { name: p.name || `Giocatore ${i + 1}`, color: COLORS[i], human: p.type === 'human', owner: p.owner || null, netGone: false, preset: pre.name,
+    const c = { name: p.name || `Giocatore ${i + 1}`, color: p.color || COLORS[i], human: p.type === 'human', owner: p.owner || null, netGone: false, preset: pre.name,
       base: baseOf(pre), tyre: 0, fuel: 100, fuelUsed: 0, dmg: 0, out: false, inPit: false, boxReq: false, pitTurns: 0,
       time: 0, lapStart: 0, laps: [], best: null, finishTime: null,
       x, z, a: Math.atan2(gs.tz, gs.tx), v: 0, idx, progress: idx > N / 2 ? idx - N : idx, skip: 0, finished: false, finishPos: 0, trail: [] };
+    if (cfg.quali) {   // qualifica: si parte da soli, più indietro del traguardo e già lanciati
+      const back = Math.round(QUALI_BACK_M / (TRACK_LEN / N)), qi = N - back, qs = S[qi];
+      Object.assign(c, { x: qs.x, z: qs.z, a: Math.atan2(qs.tz, qs.tx), idx: qi, progress: -back });
+    }
     c.mesh = CLASSES[raceClass].make(c.color); c.label = labelSprite(c.name, c.color); c.mesh.add(c.label); updatePerf(c);
-    c.mesh.position.set(x, 0.05, z); c.mesh.rotation.y = -c.a; scene.add(c.mesh);
+    c.mesh.position.set(c.x, 0.05, c.z); c.mesh.rotation.y = -c.a; scene.add(c.mesh);
     c.trailLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: c.color, transparent: true, opacity: 0.55 }));
     scene.add(c.trailLine);
     cars.push(c);
@@ -1645,10 +1679,12 @@ function startGame(cfg, resume) {
   ['menu', 'pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
   showGameUI(true);
   history = []; roundRec = null; lastHL = -10; officialOrder = []; lastOrder = positions(); lastLapShown = false;
-  if (resume) resumeFrom(resume); else startSequence();
+  if (cfg.quali) { for (const c of cars) c.v = Math.round(c.vmax * 0.45); phase = 'wait'; $('lights').classList.add('hidden'); log(`⏱ Qualifica di <b style="color:${cars[0].color}">${cars[0].name}</b>: il tempo parte sul traguardo.`); banner('QUALIFICA', cars[0].color, `${cars[0].name} · giro lanciato`); Portal.gameplayStart(); later(() => nextRound(), 1400); }
+  else if (resume) resumeFrom(resume); else startSequence();
 }
 function toMainMenu() {
   Portal.gameplayStop();
+  qualiAbort(); hideQuali();
   if (MP.net) mpLeave();
   token++; paused = false; if (RP) { RP = null; $('replayUI').classList.add('hidden'); controls.enabled = true; } $('lights').classList.add('hidden'); engineSet(0, false);
   phase = 'menu'; aimGroup.visible = false;
@@ -1674,6 +1710,7 @@ function beginTurn() {
   // a secco e fermo: ritiro (in Facile il serbatoio non scende sotto il 2%)
   if (wearOn() && c.fuel <= 0 && c.v < 1) { retire(c, 'senza benzina'); later(() => { turnIdx++; beginTurn(); }, 700); return; }
   turnRing.position.set(c.x, 0.14, c.z); turnRing.material.color.set(c.color);
+  checkBlueFlag(c);
   if (OPT.autocam && camWatch(c)) focusCamera(c);
   // auto ferma e girata contromano (es. contro il muro in un tornante): i commissari la rimettono in pista, costa il turno
   { const tt = S[c.idx], al = angW(c.a - Math.atan2(tt.tz, tt.tx));
@@ -1699,7 +1736,7 @@ function beginTurn() {
   makeGhost(c.color); buildZone(c);
   aimGroup.visible = true;
   if (ctl === 'local') { phase = 'aim'; goBtn.disabled = false; turnLeft = turnMax(); updateAim(); if (!MP.active) saveGame(); }
-  else if (ctl === 'cpu') { phase = 'cpu'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); later(() => cpuPlay(c), 450); }
+  else if (ctl === 'cpu') { phase = 'cpu'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); if (MP.active && c.human && c.netGone) later(() => { if (cur() === c && phase === 'cpu') netSendMove(c, 0, 0, false, true); }, 450); else later(() => cpuPlay(c), 450); }
   else { phase = 'remote'; goBtn.disabled = true; c.thinking = true; aimGroup.visible = false; updateAim(); netAwait(c); }
   if (MP.active) netTryInbox();
 }
@@ -1711,7 +1748,7 @@ function confirmMove() {
   if (MP.active) { MP.k++; clearTimeout(MP.timer); c.thinking = false; }
   res.u = aim.u; res.d = aim.d;
   phase = 'anim'; goBtn.disabled = true; aimGroup.visible = false;
-  animateMove(c, res, () => { if (t !== token) return; applyResult(c, res); if (MP.active && c.idle >= 2 && !c.out) mpExpel(c); turnIdx++; if (MP.active) netAfterMove(mk, () => beginTurn()); else beginTurn(); });
+  animateMove(c, res, () => { if (t !== token) return; applyResult(c, res); if (MP.active && c.parkNow && !c.out) { c.parkNow = false; retire(c, 'disconnesso: auto spostata fuori pista'); } else if (MP.active && c.idle >= 2 && !c.out) mpExpel(c); turnIdx++; if (MP.active) netAfterMove(mk, () => beginTurn()); else beginTurn(); });
 }
 function applyResult(c, r) {
   const prevV = c.v;
@@ -1729,9 +1766,9 @@ function applyResult(c, r) {
   if (r.status === 'off') { c.skip = 1; log(`${tag} esce di pista: testacoda! Riparte da fermo e salta un turno.`); }
   if (c.finished) c.mesh.traverse(o => { if (o.isMesh && o.material && !o.material.__fin) { o.material = o.material.clone(); o.material.__fin = true; o.material.transparent = true; o.material.opacity = 0.45; } });
   applyWear(c, r, prevV, Math.abs(r.u || 0));
-  if (r.status === 'off') { spawnDust(c.x, c.z); sfx.skid(1.3); addEvent(c, 4, `testacoda di ${c.name}`); addDamage(c, 3 + prevV * 0.12, 'uscita di pista violenta'); }
+  if (r.status === 'off') { showFlag(c.idx, 'gialla'); spawnDust(c.x, c.z); sfx.skid(1.3); addEvent(c, 4, `testacoda di ${c.name}`); addDamage(c, 3 + prevV * 0.12, 'uscita di pista violenta'); }
   else if (r.status === 'hit') {
-    sfx.crash(); addEvent(c, 4, `contatto di ${c.name}`, c.human || !!(r.victim && r.victim.ref && r.victim.ref.human));
+    showFlag(c.idx, 'gialla'); sfx.crash(); addEvent(c, 4, `contatto di ${c.name}`, c.human || !!(r.victim && r.victim.ref && r.victim.ref.human));
     addDamage(c, 6 + (r.d || r.speed) * 0.18, 'danni da incidente'); if (r.victim && r.victim.ref) addDamage(r.victim.ref, 4 + (r.d || r.speed) * 0.1, 'danni da incidente');
     const v = r.victim && r.victim.ref;
     if (v) { v.v = Math.max(0, Math.round(v.v * 0.7)); shakeCar(v); }
@@ -1744,7 +1781,11 @@ function applyResult(c, r) {
   if (r.status === 'ok' && prevV - r.speed >= c.brake * 0.85 && Math.abs(K[c.idx]) > 1 / 55) addEvent(c, 2.5, `staccata di ${c.name}`);
   if (r.status === 'ok' && Math.abs(r.end.lat) > HALF - 1.4 && r.speed > 30) addEvent(c, 2, `${c.name} al limite`);
   const prev = c.progress - r.gain;
-  for (let L = 1; L <= laps; L++) {
+  if (QUALI.active) {   // qualifica: il cronometro parte sul traguardo e si ferma al passaggio successivo
+    if (prev < 0 && c.progress >= 0 && r.gain > 0) { c.lapStart = c.time + (0 - prev) / r.gain * TURN_SEC; c.qStarted = true; log('⏱ Cronometro partito!'); }
+    if (c.qStarted && prev < N && c.progress >= N && r.gain > 0 && !c.finished) { const tCross = c.time + (N - prev) / r.gain * TURN_SEC; c.best = tCross - c.lapStart; c.finished = true; c.finishTime = tCross; banner(fmtTime(c.best), c.color, `${c.name} · tempo di qualifica`); if (c.human) sfx.lap(); }
+  }
+  else for (let L = 1; L <= laps; L++) {
     const B = L * N;
     if (prev < B && c.progress >= B && r.gain > 0) {
       const tCross = c.time + (B - prev) / r.gain * TURN_SEC, lt = tCross - c.lapStart;
@@ -1773,6 +1814,14 @@ function applyResult(c, r) {
 }
 const rankSort = (a, b) => (a.out !== b.out) ? (a.out ? 1 : -1) : (a.finished && b.finished) ? a.finishTime - b.finishTime : a.finished ? -1 : b.finished ? 1 : b.progress - a.progress;
 function checkGameOver() {
+  if (QUALI.active) {
+    const c = cars[0]; if (!c) return false;
+    if (!c.finished && round <= 70) return false;
+    phase = 'over'; aimGroup.visible = false; Portal.gameplayStop();
+    const t = c.finished ? c.best : null, done = QUALI.resolve; QUALI.active = false; QUALI.resolve = null;
+    setTimeout(() => done && done(t), 1600);
+    return true;
+  }
   const humans = cars.filter(c => c.human && !c.netGone);
   const over = cars.every(c => c.finished || c.out) || (humans.length > 0 && humans.every(c => c.finished || c.out)) || round > 400;
   if (!over) return false;
@@ -2054,7 +2103,7 @@ function buildTVCams() {
   }
 }
 function maybeHighlight() {
-  if (MP.active || !OPT.replays || !roundRec || roundRec.best < 4 || !roundRec.focus) return false;   // online niente replay automatici: nessuno resta indietro
+  if (MP.active || QUALI.active || !OPT.replays || !roundRec || roundRec.best < 4 || !roundRec.focus) return false;   // online niente replay automatici: nessuno resta indietro
   // replay dei giocatori umani: sempre; quelli tra CPU: non prima del round 3 e non più di uno ogni 4 round
   if (roundRec.best < 100 && (round < 3 || round - lastHL < 4)) return false;
   lastHL = round;
@@ -2350,12 +2399,12 @@ function updateHUD() {
     $('boxBtn').style.display = (wearOn() || (me && me.dmg > 0)) && laps > 1 ? '' : 'none'; }
   $('lapTimeLbl').textContent = fmtTime(Math.max(0, c.time - c.lapStart));
   $('bestLbl').textContent = fmtTime(c.best);
-  $('timerBox').classList.toggle('hidden', !((mode === 'pro' || MP.active) && ctrlOf(c) === 'local' && phase === 'aim'));
+  $('timerBox').classList.toggle('hidden', !((mode === 'pro' || MP.active || QUALI.timed) && ctrlOf(c) === 'local' && phase === 'aim'));
   const deg = Math.round(aim.u * thetaMax(c, aim.d) * 2 * 180 / Math.PI);
   $('steerLbl').textContent = deg === 0 ? 'dritto' : `${Math.abs(deg)}° ${deg > 0 ? 'destra' : 'sinistra'}`;
   const st = $('status');
   if (phase === 'wait') { st.className = 'bad'; st.textContent = 'In testacoda: salta il turno'; return; }
-  if (c.thinking) { st.className = 'neutral'; st.textContent = c.human && !c.netGone ? `In attesa di ${c.name}…` : 'CPU sta pensando…'; return; }
+  if (c.thinking) { st.className = 'neutral'; st.textContent = c.human && c.netGone ? `${c.name} si è disconnesso` : c.human ? `In attesa di ${c.name}…` : 'CPU sta pensando…'; return; }
   if (!preview) return;
   if (hideOff(c) && (preview.status !== 'hit' || hideHit(c))) { st.className = 'neutral'; st.textContent = aim.d < 0.3 ? 'Resti fermo' : `Traiettoria impostata · livello ${mode}`; }
   else if (preview.status === 'ok' && preview.trap) { st.className = 'warn'; st.textContent = 'Attenzione: troppo veloce, al prossimo turno non potrai evitare l\'uscita. Frena prima!'; }
@@ -2375,7 +2424,7 @@ function updateRank() {
 
 // viste del menu
 function showView(id) {
-  ['vMain', 'vSetup', 'vHelp', 'vRank', 'vOnline', 'vLobby'].forEach(v => $(v).classList.toggle('hidden', v !== id));
+  ['vMain', 'vSetup', 'vHelp', 'vRank', 'vOnline', 'vLobby', 'vFriends'].forEach(v => $(v).classList.toggle('hidden', v !== id));
   if (id === 'vRank') loadLeaderboard();
   if (id === 'vOnline') { openLobbyList(); loadRecords('olRecords', 'monza', 'turismo'); } else closeLobbyList();
   $('menu').classList.toggle('dim', id !== 'vMain');
@@ -2418,8 +2467,8 @@ function renderClass() {
 }
 $('classSel').onchange = renderClass; renderClass();
 $('startBtn').onclick = () => {
-  const players = [...playersEl.children].filter(r => r.querySelector('input[type=checkbox]').checked).map(r => ({ name: r.querySelector('input[type=text]').value.trim(), type: r.querySelector('.t').value, car: r.querySelector('.c').value }));
-  launchRace({ players, laps: +$('lapsSel').value, track: selTrack, mode: $('modeSel').value, wear: $('wearSel').value, cls: $('classSel').value });
+  const players = [...playersEl.children].map((r, i) => ({ r, i })).filter(({ r }) => r.querySelector('input[type=checkbox]').checked).map(({ r, i }) => ({ name: r.querySelector('input[type=text]').value.trim(), type: r.querySelector('.t').value, car: r.querySelector('.c').value, color: COLORS[i] }));
+  launchRace({ players, grid: $('gridSel').value, laps: +$('lapsSel').value, track: selTrack, mode: $('modeSel').value, wear: $('wearSel').value, cls: $('classSel').value });
 };
 
 // opzioni
@@ -2435,7 +2484,7 @@ function renderOptions() {
 $('optClose').onclick = () => $('optOverlay').classList.add('hidden');
 
 // pausa / fine
-function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = MP.active ? false : on; $('restartBtn').classList.toggle('hidden', MP.active); $('saveQuitBtn').classList.toggle('hidden', MP.active); $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
+function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = MP.active ? false : on; $('restartBtn').classList.toggle('hidden', MP.active || QUALI.active); $('saveQuitBtn').classList.toggle('hidden', MP.active || QUALI.active); $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
 $('pauseBtn').onclick = () => setPause(true);
 $('resumeBtn').onclick = () => setPause(false);
 $('restartBtn').onclick = () => launchRace(lastCfg);
@@ -2540,10 +2589,12 @@ function setGameMuted(on) {
 }
 let racesStarted = 0;
 async function launchRace(cfg) {
+  if (cfg.grid === 'casuale') { cfg = { ...cfg, players: shuffle([...cfg.players]) }; }
   if (racesStarted++ > 0) {   // la prima gara parte subito, dalla seconda c'è la pubblicità del portale
     setGameMuted(true);
     try { await Portal.commercialBreak(); } catch (e) {} finally { setGameMuted(false); }
   }
+  if (cfg.grid === 'quali') return runQualifying(cfg);
   startGame(cfg);
 }
 document.addEventListener('visibilitychange', () => {
@@ -2598,10 +2649,10 @@ async function makeNet(chName) {
 // ---------- lobby ----------
 const ROOM_LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const newCode = () => Array.from({ length: 5 }, () => ROOM_LETTERS[Math.floor(Math.random() * ROOM_LETTERS.length)]).join('');
-const mpName = () => ($('mpName').value.trim() || 'Pilota').slice(0, 13);
-try { $('mpName').value = localStorage.getItem('trs-nome') || ''; } catch (e) {}
-$('mpName').onchange = () => { try { localStorage.setItem('trs-nome', $('mpName').value.trim()); } catch (e) {} };
-const lbSettings = () => ({ track: $('lbTrack').value, cls: $('lbClass').value, laps: +$('lbLaps').value, mode: $('lbMode').value, wear: $('lbWear').value, cpu: +$('lbCpu').value });
+const mpName = () => ((MP.view === 'vFriends' ? $('frName') : $('mpName')).value.trim() || 'Pilota').slice(0, 13);
+try { $('mpName').value = $('frName').value = localStorage.getItem('trs-nome') || ''; } catch (e) {}
+['mpName', 'frName'].forEach(id => $(id).onchange = () => { const v = $(id).value.trim(); $('mpName').value = $('frName').value = v; try { localStorage.setItem('trs-nome', v); } catch (e) {} });
+const lbSettings = () => ({ track: $('lbTrack').value, cls: $('lbClass').value, laps: +$('lbLaps').value, mode: $('lbMode').value, wear: $('lbWear').value, cpu: +$('lbCpu').value, grid: $('lbGrid').value });
 const sortedPeers = () => [...MP.peers].sort((a, b) => (b.host - a.host) || (a.at - b.at) || (a.id < b.id ? -1 : 1));
 const hostPeer = () => MP.peers.find(p => p.host);
 function mpTrack() {
@@ -2622,14 +2673,15 @@ async function pwTag(pw) {
   try { const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('trs:' + pw)); return '-' + [...new Uint8Array(h)].slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join(''); }
   catch (e) { let x = 5381; for (const ch of pw) x = (x * 33 + ch.charCodeAt(0)) >>> 0; return '-' + x.toString(16); }
 }
-async function mpOpen(code, asHost, pw = '', room = null) {
-  const msg = $('mpMsg'); msg.textContent = asHost ? 'Creo la stanza…' : 'Cerco la stanza…';
+async function mpOpen(code, asHost, pw = '', room = null, view = 'vOnline') {
+  MP.view = view;
+  const msg = $(view === 'vFriends' ? 'frMsg' : 'mpMsg'); msg.textContent = asHost ? 'Creo la stanza…' : 'Cerco la stanza…';
   closeLobbyList();
   try { MP.net = await makeNet('trs-room-' + code + await pwTag(pw)); msg.textContent = ''; }
   catch (e) { msg.textContent = 'Connessione non riuscita. Controlla la rete e riprova (il multiplayer funziona sul sito del gioco).'; MP.net = null; return; }
   Object.assign(MP, { code, host: asHost, joinedAt: Date.now(), ready: false, started: false, peers: [], active: false, hasPw: !!pw.trim(), room: room || { name: '', pub: false, max: MP_MAX } });
   MP.net.onPeers(onPeers);
-  MP.net.on('start', onNetStart); MP.net.on('mv', onNetMove); MP.net.on('fix', onNetFix); MP.net.on('gone', onNetGone);
+  MP.net.on('start', onNetStart); MP.net.on('qstart', onQStart); MP.net.on('qtime', onQTime); MP.net.on('qgrid', onQGrid); MP.net.on('mv', onNetMove); MP.net.on('fix', onNetFix); MP.net.on('gone', onNetGone);
   MP.net.on('box', d => { const c = cars[d.ci]; if (!c) return; c.boxReq = d.on; log(d.on ? `📥 <b style="color:${c.color}">${c.name}</b> prenota il box.` : `<b style="color:${c.color}">${c.name}</b> annulla il box.`); updateHUD(); updateRank(); });
   MP.net.on('lobby', () => { if (!MP.host && MP.active) mpBackToLobby(); });
   $('lbCode').textContent = code; $('lbName').textContent = MP.room.name || 'Stanza'; fillSetups($('lbClass').value);
@@ -2639,7 +2691,7 @@ async function mpOpen(code, asHost, pw = '', room = null) {
     if (!MP.net || MP.code !== code || MP.active) return;
     const h = hostPeer(), max = h && h.room ? h.room.max : MP_MAX;
     const why = !h ? (pw.trim() ? 'Password errata, oppure la stanza non esiste più.' : 'Stanza non trovata: controlla il codice (se la stanza ha il lucchetto serve la password).') : h.started ? 'In questa stanza la gara è già partita.' : MP.peers.length > max ? 'La stanza è piena.' : null;
-    if (why) { mpLeave(); showView('vOnline'); $('mpMsg').textContent = why; }
+    if (why) { mpLeave(); showView(view); msg.textContent = why; }
   }, 3500);
 }
 function mpLeave() { clearTimeout(MP.timer); clearInterval(MP.autoTimer); MP.autoTimer = null; mpAnnounceClose(); try { MP.net && MP.net.close(); } catch (e) {} Object.assign(MP, { net: null, active: false, host: false, code: null, peers: [], started: false }); }
@@ -2647,10 +2699,10 @@ function renderLobby() {
   if (!MP.net) return;
   const h = hostPeer(), ps = sortedPeers();
   if (!MP.host && h && h.settings) {   // gli ospiti vedono le impostazioni dell'host
-    const st = h.settings; $('lbTrack').value = st.track; $('lbLaps').value = st.laps; $('lbMode').value = st.mode; $('lbWear').value = st.wear; $('lbCpu').value = st.cpu;
+    const st = h.settings; $('lbTrack').value = st.track; $('lbLaps').value = st.laps; $('lbMode').value = st.mode; $('lbWear').value = st.wear; $('lbCpu').value = st.cpu; $('lbGrid').value = st.grid || 'ordine';
     if ($('lbClass').value !== st.cls) { $('lbClass').value = st.cls; fillSetups(st.cls); mpTrack(); }
   }
-  ['lbTrack', 'lbClass', 'lbLaps', 'lbMode', 'lbWear', 'lbCpu'].forEach(id => $(id).disabled = !MP.host);
+  ['lbTrack', 'lbClass', 'lbLaps', 'lbMode', 'lbWear', 'lbCpu', 'lbGrid'].forEach(id => $(id).disabled = !MP.host);
   const cls = $('lbClass').value;
   $('lbPlayers').innerHTML = ps.map((p, i) => `<div class="res"><span class="dot" style="background:${COLORS[i % COLORS.length]}"></span><span style="flex:1">${esc(p.name)}${p.host ? '<span class="tagh">HOST</span>' : ''}${p.id === myId ? ' <small style="color:#9fb0cc">(tu)</small>' : ''} <small style="color:#9fb0cc">· ${(CLASSES[cls].presets[p.setup] || {}).name || '—'}</small></span><b style="color:${p.ready ? '#7dffb1' : '#9fb0cc'}">${p.host ? 'host' : p.ready ? 'pronto' : 'non pronto'}</b></div>`).join('') || '<p class="sub">Collegamento…</p>';
   const guests = ps.filter(p => !p.host), allReady = guests.length > 0 && guests.every(p => p.ready);
@@ -2659,7 +2711,7 @@ function renderLobby() {
   $('lbReady').textContent = MP.ready ? 'Non sono pronto' : 'Sono pronto';
   const room = MP.host ? MP.room : (h && h.room) || MP.room, max = room.max || MP_MAX;
   $('lbName').textContent = room.name || 'Stanza';
-  $('lbInfo').textContent = `${room.pub ? 'Stanza pubblica, visibile in "Stanze aperte"' : 'Stanza privata: si entra solo con il codice'}${MP.hasPw ? ' · con password 🔒' : ''} · posti ${Math.min(ps.length, max)}/${max}.` + (MP.host ? ' Dai il codice agli amici: lo scrivono in "Hai un codice?".' : '');
+  $('lbInfo').textContent = `${!room.pub ? 'Stanza con invito: si entra solo con il codice' : MP.hasPw ? 'Stanza privata 🔒 in "Stanze online": serve la password' : 'Stanza pubblica in "Stanze online"'} · posti ${Math.min(ps.length, max)}/${max}.` + (MP.host && !room.pub ? ' Manda il codice agli amici: lo scrivono in "Hai un codice?".' : '');
   const full = ps.length >= max;
   // posti tutti occupati e tutti pronti: la gara parte da sola dopo 5 secondi
   if (MP.host && full && allReady && !MP.started) { if (!MP.autoTimer) { MP.autoLeft = 5; MP.autoTimer = setInterval(() => { MP.autoLeft--; if (MP.autoLeft <= 0) { clearInterval(MP.autoTimer); MP.autoTimer = null; if (MP.host && !MP.started) $('lbStart').onclick(); } else renderLobby(); }, 1000); } }
@@ -2681,32 +2733,39 @@ function onPeers(list) {
   }
   renderLobby();
 }
-['lbTrack', 'lbClass', 'lbLaps', 'lbMode', 'lbWear', 'lbCpu'].forEach(id => $(id).onchange = () => { if (id === 'lbClass') fillSetups($('lbClass').value); mpTrack(); renderLobby(); });
+['lbTrack', 'lbClass', 'lbLaps', 'lbMode', 'lbWear', 'lbCpu', 'lbGrid'].forEach(id => $(id).onchange = () => { if (id === 'lbClass') fillSetups($('lbClass').value); mpTrack(); renderLobby(); });
 $('lbSetup').onchange = () => { mpTrack(); renderLobby(); };
 $('lbReady').onclick = () => { MP.ready = !MP.ready; mpTrack(); renderLobby(); };
-$('lbLeave').onclick = () => { mpLeave(); showView('vOnline'); $('mpMsg').textContent = ''; };
+$('lbLeave').onclick = () => { const v = MP.view || 'vOnline'; mpLeave(); showView(v); $('mpMsg').textContent = $('frMsg').textContent = ''; };
 $('mpCreate').onclick = () => {
-  const room = { name: ($('mpRoomName').value.trim() || `Stanza di ${mpName()}`).slice(0, 24), pub: $('mpPublic').value === '1', max: +$('mpSeats').value };
-  mpOpen(newCode(), true, $('mpPass').value, room);
+  MP.view = 'vOnline';
+  const room = { name: ($('mpRoomName').value.trim() || `Stanza di ${mpName()}`).slice(0, 24), pub: true, max: +$('mpSeats').value };
+  mpOpen(newCode(), true, $('mpPass').value, room, 'vOnline');
 };
-$('mpJoin').onclick = () => { const code = $('mpCode').value.trim().toUpperCase(); if (!/^[A-Z]{5}$/.test(code)) { $('mpMsg').textContent = 'Il codice è di 5 lettere.'; return; } mpOpen(code, false, $('mpCodePass').value); };
-$('mpCode').onkeydown = e => { if (e.key === 'Enter') $('mpJoin').onclick(); };
+$('frCreate').onclick = () => { MP.view = 'vFriends'; mpOpen(newCode(), true, '', { name: `Stanza di ${mpName()}`, pub: false, max: MP_MAX }, 'vFriends'); };
+$('frJoin').onclick = () => { const code = $('frCode').value.trim().toUpperCase(); if (!/^[A-Z]{5}$/.test(code)) { $('frMsg').textContent = 'Il codice è di 5 lettere.'; return; } MP.view = 'vFriends'; mpOpen(code, false, '', null, 'vFriends'); };
+$('frCode').onkeydown = e => { if (e.key === 'Enter') $('frJoin').onclick(); };
 $('lbStart').onclick = () => {
   if (!MP.host) return;
   const st = lbSettings(), presets = Object.keys(CLASSES[st.cls].presets);
-  const players = sortedPeers().slice(0, MP_MAX).map(p => ({ name: p.name, type: 'human', car: CLASSES[st.cls].presets[p.setup] ? p.setup : presets[0], owner: p.id }));
+  const players = sortedPeers().slice(0, MP_MAX).map((p, i) => ({ name: p.name, type: 'human', car: CLASSES[st.cls].presets[p.setup] ? p.setup : presets[0], owner: p.id, color: COLORS[i % COLORS.length] }));
   const cpuNames = DEFAULT_PLAYERS.filter(p => p.type === 'cpu').map(p => p.name);
-  for (let i = 0; i < st.cpu && players.length < MP_MAX; i++) players.push({ name: cpuNames[i], type: 'cpu', car: presets[(i + 1) % presets.length] });
+  for (let i = 0; i < st.cpu && players.length < MP_MAX; i++) players.push({ name: cpuNames[i], type: 'cpu', car: presets[(i + 1) % presets.length], color: COLORS[players.length % COLORS.length] });
   MP.started = true; clearInterval(MP.autoTimer); MP.autoTimer = null; mpTrack();
-  MP.net.send('start', { cfg: { players, laps: st.laps, track: st.track, mode: st.mode, wear: st.wear, cls: st.cls }, hostId: myId });
+  const cfg = { players, laps: st.laps, track: st.track, mode: st.mode, wear: st.wear, cls: st.cls };
+  if (st.grid === 'quali') return MP.net.send('qstart', { cfg, hostId: myId });
+  if (st.grid === 'casuale') shuffle(cfg.players);
+  MP.net.send('start', { cfg, hostId: myId });
 };
 function onNetStart(d) {
   if (!MP.net || MP.active) return;
+  qualiAbort(); hideQuali(); MP.quali = null;
   if (!d.cfg.players.some(p => p.owner === myId)) return;   // entrato a gara già decisa: resta in lobby
   Object.assign(MP, { active: true, k: 0, inbox: {}, fixes: {}, pending: null, hostId: d.hostId, ready: false });
   startGame(d.cfg);
 }
 function mpBackToLobby() {
+  qualiAbort(); hideQuali(); MP.quali = null;
   if (!MP.net) return toMainMenu();
   if (MP.host && MP.active) MP.net.send('lobby', {});
   MP.active = false; MP.started = false; MP.ready = false; clearTimeout(MP.timer);
@@ -2756,7 +2815,7 @@ function renderLobbyList() {
   $('olList').querySelectorAll('[data-join]').forEach(b => b.onclick = () => {
     const code = b.dataset.join, r = rooms.find(x => x.code === code), inp = $('olList').querySelector(`[data-pw="${code}"]`);
     if (r && r.pw && !(inp && inp.value.trim())) { if (inp) inp.focus(); $('mpMsg').textContent = 'Questa stanza ha la password: scrivila accanto a "Entra".'; return; }
-    mpOpen(code, false, inp ? inp.value : '');
+    MP.view = 'vOnline'; mpOpen(code, false, inp ? inp.value : '', null, 'vOnline');
   });
 }
 // migliori giri (Supabase): piccolo riquadro nel multiplayer e nella stanza
@@ -2771,7 +2830,7 @@ async function loadRecords(boxId, track, cls) {
 }
 
 // ---------- mosse in rete ----------
-function netSendMove(c, d, u, idle = false) { MP.net.send('mv', { k: MP.k, ci: cars.indexOf(c), d, u, idle }); }
+function netSendMove(c, d, u, idle = false, park = false) { MP.net.send('mv', { k: MP.k, ci: cars.indexOf(c), d, u, idle, park }); }
 function onNetMove(m) { if (!MP.active || m.k < MP.k) return; MP.inbox[m.k] = m; netTryInbox(); }
 function netTryInbox() {
   const m = MP.inbox[MP.k];
@@ -2783,7 +2842,8 @@ function netTryInbox() {
   // chi non muove entro il tempo resta fermo; al secondo turno di fila senza muovere viene espulso
   if (c.human) c.idle = m.idle ? (c.idle || 0) + 1 : 0;
   if (m.idle) log(`⏱ <b style="color:${c.color}">${c.name}</b> non ha mosso: resta fermo${c.idle >= 2 ? '' : ' (al prossimo turno senza mossa viene espulso)'}.`);
-  MP.applying = true; aim = m.idle ? { d: 0, u: 0 } : { d: m.d, u: m.u };
+  if (m.park) c.parkNow = true;
+  MP.applying = true; aim = (m.idle || m.park) ? { d: 0, u: 0 } : { d: m.d, u: m.u };
   try { confirmMove(); } finally { MP.applying = false; }
 }
 // turno di un altro: l'host fa giocare la CPU al posto di chi non risponde
@@ -2800,8 +2860,8 @@ const carState = c => ({ x: c.x, z: c.z, a: c.a, idx: c.idx, v: c.v, accel: c.ac
 function onNetGone(d) {
   if (!MP.active) return;
   for (const c of cars) if (c.owner === d.id && !c.netGone) {
-    c.netGone = true; log(`📴 <b style="color:${c.color}">${c.name}</b> ha lasciato la gara: la sua auto passa alla CPU.`);
-    if (MP.host && cur() === c && phase === 'remote') { clearTimeout(MP.timer); phase = 'cpu'; later(() => cpuPlay(c), 450); }
+    c.netGone = true; log(`📴 <b style="color:${c.color}">${c.name}</b> si è disconnesso: al suo turno l'auto va fuori pista e si ritira.`);
+    if (MP.host && cur() === c && phase === 'remote') { clearTimeout(MP.timer); phase = 'cpu'; later(() => { if (cur() === c) netSendMove(c, 0, 0, false, true); }, 450); }
   }
   updateRank();
 }
@@ -2846,7 +2906,7 @@ const SAVE_KEY = 'trs-partita';
 const SAVE_KEYS = [...FIX_KEYS, 'err', 'trend', 'trendR', 'thinking'];
 let snap = null;
 function takeSnapshot() {
-  if (MP.active || !lastCfg) { snap = null; return; }
+  if (MP.active || QUALI.active || !lastCfg) { snap = null; return; }
   snap = JSON.parse(JSON.stringify({
     v: 1, cfg: lastCfg, round, turnIdx, finishCount, lastLapShown,
     order: order.map(c => cars.indexOf(c)), official: officialOrder.map(c => cars.indexOf(c)), last: lastOrder.map(c => cars.indexOf(c)),
@@ -2892,10 +2952,139 @@ $('resumeSaved').onclick = () => { const d = loadSave(); if (!d) return updateRe
 $('saveQuitBtn').onclick = () => { if (MP.active) return; const ok = saveGame(); toMainMenu(); if (!ok) $('resumeInfo').textContent = 'salvataggio non riuscito'; };
 updateResumeBtn();
 
+
+/* ================== COMMISSARI: BANDIERA GIALLA E BLU ================== */
+const FLAG_COL = { gialla: 0xf4c430, blu: 0x1d6fe0 };
+// gialla: uscita di pista o contatto nel tratto; blu: l'auto sta per essere doppiata e deve lasciare passare
+function showFlag(idx, kind, ms = kind === 'gialla' ? 9000 * animF() + 6000 : 7000) {
+  const until = performance.now() + ms;
+  for (const m of marshals) { const d = Math.abs(idxDelta(m.idx, idx)); if (d < 70) { m.color = kind; m.until = Math.max(m.until, until); m.mat.color.setHex(FLAG_COL[kind]); } }
+}
+function checkBlueFlag(c) {
+  if (QUALI.active || c.finished || c.out) return;
+  const lead = cars.filter(o => !o.finished && !o.out).sort((a, b) => b.progress - a.progress)[0];
+  if (!lead || lead === c) return;
+  const gap = lead.progress - c.progress;   // il leader è dietro di poco in pista ma un giro avanti
+  if (gap > N - 60 && gap < N + 5) {
+    showFlag(c.idx, 'blu');
+    if (c.blueR !== round && (ctrlOf(c) === 'local')) log(`🟦 Bandiera blu per <b style="color:${c.color}">${c.name}</b>: sta arrivando <b style="color:${lead.color}">${lead.name}</b> a doppiarti, lascialo passare.`);
+    c.blueR = round;
+  }
+}
+function stepFlags(now) {
+  for (const m of marshals) {
+    const on = m.until > now; m.pivot.visible = on;
+    if (on) m.pivot.rotation.z = Math.sin(now * 0.012 + m.idx) * 0.7 - 0.2;
+  }
+}
+
+/* ================== QUALIFICA (giro lanciato) ==================
+   Ognuno da solo in pista: si parte più indietro del traguardo, già lanciati; il tempo parte sul traguardo
+   e si ferma al passaggio successivo. La griglia di partenza va a chi fa il miglior tempo. */
+const QUALI_BACK_M = 90;
+const QUALI = { active: false, timed: false, resolve: null, aborted: false };
+function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function qualiAbort() { QUALI.aborted = true; QUALI.timed = false; if (QUALI.active) { QUALI.active = false; const r = QUALI.resolve; QUALI.resolve = null; r && r(null); } }
+function hideQuali() { $('qualiScreen').classList.add('hidden'); }
+function showQuali(rows, sub, final) {
+  $('qualiScreen').classList.remove('hidden'); $('menu').classList.add('hidden'); showGameUI(false);
+  $('qSub').textContent = sub;
+  const sorted = final ? rows : rows;
+  $('qList').innerHTML = sorted.map((r, i) => `<div class="res"><span class="p">${final ? (i + 1) + '°' : ''}</span><span class="dot" style="background:${r.p.color}"></span><span style="flex:1">${esc(r.p.name)} <small style="color:#9fb0cc">· ${(ALL_PRESETS[r.p.car] || {}).name || ''}${r.p.type === 'cpu' ? ' · CPU' : ''}</small></span><b>${r.t === undefined ? '<span style="color:#9fb0cc">…</span>' : r.t === null ? '<span style="color:#ff9aa4">nessun tempo</span>' : fmtTime(r.t)}</b></div>`).join('');
+  $('qGo').classList.toggle('hidden', !final || MP.net);
+}
+// la CPU fa il suo giro "a mente" (niente animazione), un turno alla volta per non bloccare la pagina
+async function simQualiLap(p, cfg) {
+  const pre = ALL_PRESETS[p.car] || PRESETS.bilanciata, b = baseOf(pre), back = Math.round(QUALI_BACK_M / (TRACK_LEN / N)), gi = N - back, s0 = S[gi], lvl = AI[OPT.cpu] || AI.normale;
+  let st = { x: s0.x, z: s0.z, a: Math.atan2(s0.tz, s0.tx), idx: gi, v: Math.round(b.vmax * 0.45), accel: b.accel, brake: b.brake, grip: b.grip, vmax: b.vmax, lat: b.lat, draft: false, lastSteer: 0 };
+  let prog = -back, time = 0, start = null, skip = 0;
+  const saved = round;
+  for (let step = 0; step < 120; step++) {
+    if (QUALI.aborted) return null;
+    if (skip) { skip--; time += TURN_SEC; continue; }
+    round = 10; let best = aiChoose(st, [], lvl); round = saved;
+    if (!best) return null;
+    const [lo, hi] = range(st);
+    let d = best.d, u = best.u;
+    if (Math.random() < lvl.err) { if (Math.random() < 0.5) d = Math.min(hi, d + (hi - lo) * 0.4); else u = clamp(u + (Math.random() < 0.5 ? -0.4 : 0.4), -1, 1); }
+    const r = resolveMove(st, d, u, 30, null), before = prog;
+    prog += r.gain;
+    if (start === null && before < 0 && prog >= 0 && r.gain > 0) start = time + (0 - before) / r.gain * TURN_SEC;
+    if (start !== null && before < N && prog >= N && r.gain > 0) return time + (N - before) / r.gain * TURN_SEC - start;
+    time += TURN_SEC;
+    st = { ...st, x: r.end.x, z: r.end.z, a: r.end.a, idx: r.end.idx, v: r.speed, lastSteer: angW(r.end.a - st.a) };
+    if (r.status === 'off') skip = 1;
+    await new Promise(res => setTimeout(res, 0));
+  }
+  return null;
+}
+// il giocatore guida il suo giro di qualifica
+function qualiDrive(cfg, p, timed) {
+  return new Promise(res => { hideQuali(); QUALI.active = true; QUALI.timed = !!timed; QUALI.resolve = t => { QUALI.timed = false; res(t); }; startGame({ ...cfg, players: [p], laps: 1, wear: 'off', quali: true }); });
+}
+async function runQualifying(cfg) {
+  QUALI.aborted = false;
+  if (trackKey !== cfg.track) buildWorld(cfg.track);
+  phase = 'menu'; clearCars();
+  const rows = cfg.players.map(p => ({ p, t: undefined }));
+  const cpus = rows.filter(r => r.p.type !== 'human'), hum = rows.filter(r => r.p.type === 'human');
+  for (const r of cpus) { showQuali(rows, `Le CPU fanno il loro giro lanciato… (${cpus.indexOf(r) + 1}/${cpus.length})`); r.t = await simQualiLap(r.p, cfg); if (QUALI.aborted) return; }
+  for (const r of hum) {
+    showQuali(rows, `Tocca a ${r.p.name}: un giro lanciato, il tempo parte sul traguardo.`);
+    await new Promise(res => setTimeout(res, 1800)); if (QUALI.aborted) return;
+    r.t = await qualiDrive(cfg, r.p, false); if (QUALI.aborted) return;
+    clearCars(); phase = 'menu';
+  }
+  const order = [...rows].sort((a, b) => (a.t ?? Infinity) - (b.t ?? Infinity));
+  showQuali(order, 'Griglia di partenza: in pole chi ha fatto il miglior tempo.', true);
+  $('qGo').onclick = () => { hideQuali(); startGame({ ...cfg, players: order.map(r => r.p) });   /* la rivincita rifà la qualifica */ };
+}
+$('qQuit').onclick = () => { hideQuali(); if (MP.net) mpLeave(); toMainMenu(); };
+
+// qualifica online: ognuno guida il suo giro nello stesso momento, l'host fa girare le CPU e decide la griglia
+function onQStart(d) {
+  if (!MP.net || MP.active) return;
+  const me = d.cfg.players.find(p => p.owner === myId); if (!me) return;
+  MP.quali = { cfg: d.cfg, hostId: d.hostId, rows: d.cfg.players.map(p => ({ p, t: undefined })), sent: false };
+  QUALI.aborted = false;
+  if (trackKey !== d.cfg.track) buildWorld(d.cfg.track);
+  (async () => {
+    showQuali(MP.quali.rows, 'Qualifica: ognuno fa il suo giro lanciato da solo, nello stesso momento. 15 secondi per mossa.');
+    await new Promise(res => setTimeout(res, 2000)); if (QUALI.aborted || !MP.quali) return;
+    const t = await qualiDrive(d.cfg, me, true); if (QUALI.aborted || !MP.quali) return;
+    clearCars(); phase = 'menu';
+    MP.net.send('qtime', { i: d.cfg.players.indexOf(me), t });
+    if (MP.host) {
+      for (const [i, p] of d.cfg.players.entries()) if (p.type !== 'human') { showQuali(MP.quali.rows, 'Le CPU fanno il loro giro lanciato…'); const ct = await simQualiLap(p, d.cfg); if (!MP.quali) return; MP.net.send('qtime', { i, t: ct }); }
+      MP.qTimer = setTimeout(qualiFinish, 150000);   // chi non finisce entro 2 minuti e mezzo parte in fondo
+    }
+  })();
+}
+function onQTime(d) {
+  if (!MP.quali) return;
+  const r = MP.quali.rows[d.i]; if (r) r.t = d.t;
+  if ($('qualiScreen').classList.contains('hidden') && !QUALI.active) showQuali(MP.quali.rows, 'In attesa degli altri piloti…');
+  else if (!QUALI.active) showQuali(MP.quali.rows, 'In attesa degli altri piloti…');
+  if (MP.host && MP.quali.rows.every(r => r.t !== undefined)) qualiFinish();
+}
+function qualiFinish() {
+  if (!MP.host || !MP.quali || MP.quali.sent) return;
+  clearTimeout(MP.qTimer); MP.quali.sent = true;
+  const order = [...MP.quali.rows].sort((a, b) => (a.t ?? Infinity) - (b.t ?? Infinity));
+  MP.net.send('qgrid', { rows: order.map(r => ({ i: MP.quali.rows.indexOf(r), t: r.t ?? null })) });
+  setTimeout(() => MP.net && MP.net.send('start', { cfg: { ...MP.quali.cfg, players: order.map(r => r.p) }, hostId: myId }), 4500);
+}
+function onQGrid(d) {
+  if (!MP.quali) return;
+  qualiAbort(); clearCars(); phase = 'menu';
+  const rows = d.rows.map(x => ({ p: MP.quali.cfg.players[x.i], t: x.t }));
+  showQuali(rows, 'Griglia di partenza: la gara parte tra pochi secondi.', true);
+}
+
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.20';
+const GAME_VERSION = 'v0.21';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
@@ -2986,11 +3175,12 @@ renderer.setAnimationLoop(now => {
   }
   for (const c of clouds) { c.g.position.x += c.s * dt; if (c.g.position.x > 700) c.g.position.x = -700; }
   for (const s of spinners) s.o.rotation.x += s.s * dt * 2;
+  stepFlags(now);
   if (jetSys) stepJets(dt);
   for (const f of floaters) { f.g.position.y = f.y0 + Math.sin(now * 0.0005 + f.ph) * 3; f.g.position.x += f.vx * dt; f.g.rotation.y += dt * 0.05; }
   turnRing.visible = !['menu', 'over', 'anim', 'start', 'replay'].includes(phase);
   turnRing.scale.setScalar(1 + Math.sin(now * 0.006) * 0.08);
-  if ((mode === 'pro' || MP.active) && phase === 'aim' && !paused && cur() && ctrlOf(cur()) === 'local') {
+  if ((mode === 'pro' || MP.active || QUALI.timed) && phase === 'aim' && !paused && cur() && ctrlOf(cur()) === 'local') {
     const before = Math.ceil(turnLeft); turnLeft -= Math.min(rawDt, 0.5); if (Math.ceil(turnLeft) !== before && turnLeft <= 5 && turnLeft > 0) sfx.tick();
     $('timerLbl').textContent = Math.max(0, Math.ceil(turnLeft)); $('timerBar').style.width = `${clamp(turnLeft / turnMax(), 0, 1) * 100}%`;
     $('timerBar').style.background = turnLeft < 5 ? '#ff4757' : '#f4b400';
