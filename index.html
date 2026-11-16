@@ -67,6 +67,7 @@
   .tcard{background:#1b2338;border:2px solid transparent;border-radius:12px;padding:10px;cursor:pointer;transition:border-color .15s}
   .tcard.sel{border-color:#e63946}
   .tcard.locked{cursor:not-allowed;opacity:.5;filter:grayscale(.7)}
+  button.danger{background:#e63946;border-color:#e63946;color:#fff}
   .tcard.locked b::before{content:'🔒 '}
   .tcard canvas{width:100%;height:auto;display:block;border-radius:8px;background:#22304a}
   .tcard b{display:block;margin-top:8px;font-size:15px}
@@ -209,7 +210,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.27</div>
+    <div class="ver">Prototipo v0.28</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -321,6 +322,11 @@
       <button id="restartBtn">Ricomincia la gara</button>
       <button id="pauseOptBtn">Opzioni</button>
       <button id="saveQuitBtn">💾 Salva ed esci</button>
+      <button id="giveUpBtn" class="hidden">🏳 Ritirati dalla gara</button>
+      <div id="giveUpAsk" class="hidden">
+        <p class="sub" style="margin:0 0 8px">Ti ritiri dalla gara? La tua auto esce di pista, ma resti a guardare fino alla fine.</p>
+        <div style="display:flex;gap:8px"><button id="giveUpNo" style="flex:1">Annulla</button><button id="giveUpYes" class="danger" style="flex:1">Sì, mi ritiro</button></div>
+      </div>
       <button id="quitBtn">Menu principale</button>
     </div>
   </div>
@@ -1292,9 +1298,8 @@ function buildWorld(key) {
 
     const R = 80, rocks = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1.4, 0), flat(0x8b8f96), R); let r = 0; guard = 0;
     while (r < R && guard++ < 3000) {
-      const x = RX(3), z = RZ(3);
-      if (!isClear(x, z, 1, HALF + 5)) continue;
-      const s = 0.5 + rnd() * 1.5;
+      const x = RX(3), z = RZ(3), s = 0.5 + rnd() * 1.5;
+      if (!isClear(x, z, 1.4 * s, HALF + 11)) continue;   // mai sassi sulla ghiaia delle curve (arriva a HALF + 10)
       Q.setFromEuler(new THREE.Euler(rnd() * 3, rnd() * 3, rnd() * 3));
       M.compose(V.set(x, groundH(x, z) + 0.4 * s, z), Q, SC.set(s, s * 0.7, s)); rocks.setMatrixAt(r++, M); treePts.push({ x, z, r: 1.4 * s });
     }
@@ -1971,7 +1976,7 @@ function confirmMove() {
   if (MP.active) { MP.k++; clearTimeout(MP.timer); c.thinking = false; }
   res.u = aim.u; res.d = aim.d;
   phase = 'anim'; goBtn.disabled = true; aimGroup.visible = false;
-  animateMove(c, res, () => { if (t !== token) return; applyResult(c, res); if (MP.active && c.parkNow && !c.out) { c.parkNow = false; retire(c, 'disconnesso: auto spostata fuori pista'); } else if (MP.active && c.idle >= 2 && !c.out) mpExpel(c); turnIdx++; if (MP.active) netAfterMove(mk, () => beginTurn()); else beginTurn(); });
+  animateMove(c, res, () => { if (t !== token) return; applyResult(c, res); if (MP.active && c.parkNow && !c.out) { c.parkNow = false; retire(c, c.gaveUp ? 'si è ritirato dalla gara' : 'disconnesso: auto spostata fuori pista'); } else if (MP.active && c.idle >= 2 && !c.out) mpExpel(c); turnIdx++; if (MP.active) netAfterMove(mk, () => beginTurn()); else beginTurn(); });
 }
 function applyResult(c, r) {
   const prevV = c.v;
@@ -2800,10 +2805,21 @@ function renderOptions() {
 $('optClose').onclick = () => $('optOverlay').classList.add('hidden');
 
 // pausa / fine
-function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = MP.active ? false : on; $('restartBtn').classList.toggle('hidden', MP.active || QUALI.active); $('saveQuitBtn').classList.toggle('hidden', MP.active || QUALI.active); $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
+function setPause(on) { if (phase === 'menu' || (phase === 'over' && !RP)) return; paused = MP.active ? false : on; $('restartBtn').classList.toggle('hidden', MP.active || QUALI.active); $('saveQuitBtn').classList.toggle('hidden', MP.active || QUALI.active);
+  { const me = cars.find(c => c.human && c.owner === myId); $('giveUpBtn').classList.toggle('hidden', !(MP.active && me && !me.out && !me.finished)); $('giveUpAsk').classList.add('hidden'); } $('pause').classList.toggle('hidden', !on); if (on) Portal.gameplayStop(); else Portal.gameplayStart(); }
 $('pauseBtn').onclick = () => setPause(true);
 $('resumeBtn').onclick = () => setPause(false);
 $('restartBtn').onclick = () => launchRace(lastCfg);
+// ritiro volontario online: si conferma, poi si resta a guardare la gara
+$('giveUpBtn').onclick = () => { $('giveUpBtn').classList.add('hidden'); $('giveUpAsk').classList.remove('hidden'); };
+$('giveUpNo').onclick = () => { $('giveUpAsk').classList.add('hidden'); $('giveUpBtn').classList.remove('hidden'); };
+$('giveUpYes').onclick = () => {
+  const me = cars.find(c => c.human && c.owner === myId);
+  $('giveUpAsk').classList.add('hidden');
+  if (!me || !MP.net) return;
+  MP.net.send('quit', { ci: cars.indexOf(me) });   // send avvisa anche questa pagina
+  setPause(false);
+};
 $('pauseOptBtn').onclick = () => $('optOverlay').classList.remove('hidden');
 $('quitBtn').onclick = toMainMenu;
 $('againBtn').onclick = () => { if (MP.net) return mpBackToLobby(); launchRace(lastCfg); };
@@ -2932,6 +2948,14 @@ addEventListener('contextmenu', e => { if (e.target === renderer.domElement) e.p
 const MP_TURN_SEC = 15, MP_MAX = 8;   // online: 15 secondi per turno a tutti i livelli
 const MP = { active: false, host: false, net: null, code: null, peers: [], k: 0, inbox: {}, fixes: {}, pending: null, applying: false, timer: null, hostId: null, joinedAt: 0, ready: false, started: false };
 const myId = (() => { const r = () => Math.random().toString(36).slice(2, 10); try { let v = sessionStorage.getItem('trs-id'); if (!v) { v = r(); sessionStorage.setItem('trs-id', v); } return v; } catch (e) { return r(); } })();
+// chi si ritira resta collegato e continua a guardare: la sua auto viene parcheggiata fuori pista come per un disconnesso
+function onNetQuit(d) {
+  const c = cars[d.ci]; if (!c || c.netGone || c.out) return;
+  c.netGone = true; c.gaveUp = true;
+  log(`🏳 <b style="color:${c.color}">${c.name}</b> si ritira dalla gara: al suo turno l'auto va fuori pista. Resta a guardare.`);
+  if (c.owner === myId) { OPT.camMode = 'turni'; applyOptions(); banner('RITIRATO', '#ff9aa4', 'resti a guardare la gara'); }
+  if (MP.host && cur() === c && phase === 'remote') { clearTimeout(MP.timer); phase = 'cpu'; later(() => { if (cur() === c) netSendMove(c, 0, 0, false, true); }, 450); }
+}
 function ctrlOf(c) {
   if (!MP.active) return c.human ? 'local' : 'cpu';
   if (c.human && !c.netGone) return c.owner === myId ? 'local' : 'remote';
@@ -3000,6 +3024,7 @@ async function mpOpen(code, asHost, pw = '', room = null, view = 'vOnline') {
   MP.net.on('start', onNetStart); MP.net.on('qstart', onQStart); MP.net.on('qtime', onQTime); MP.net.on('qgrid', onQGrid); MP.net.on('mv', onNetMove); MP.net.on('fix', onNetFix); MP.net.on('gone', onNetGone);
   MP.net.on('box', d => { const c = cars[d.ci]; if (!c) return; c.boxReq = d.on; log(d.on ? `📥 <b style="color:${c.color}">${c.name}</b> prenota il box.` : `<b style="color:${c.color}">${c.name}</b> annulla il box.`); updateHUD(); updateRank(); });
   MP.net.on('lobby', () => { if (!MP.host && MP.active) mpBackToLobby(); });
+  MP.net.on('quit', onNetQuit);
   $('lbCode').textContent = code; $('lbName').textContent = MP.room.name || 'Stanza'; fillSetups($('lbClass').value);
   if (asHost) mpAnnounceOpen();
   showView('vLobby'); mpTrack(); renderLobby();
@@ -3187,7 +3212,7 @@ function mpExpel(c) {
   if (c.owner === myId) banner('ESPULSO', '#ff4757', 'non hai mosso per due turni di fila');
 }
 // dopo ogni mossa: l'host manda la fotografia ufficiale, gli altri la applicano prima di continuare
-const FIX_KEYS = ['idle', 'x', 'z', 'a', 'idx', 'v', 'progress', 'skip', 'stuck', 'tyre', 'fuel', 'fuelUsed', 'dmg', 'out', 'finished', 'finishPos', 'finishTime', 'time', 'lapStart', 'laps', 'best', 'inPit', 'pitTurns', 'pitWork', 'boxReq', 'draft', 'lastSteer', 'netGone'];
+const FIX_KEYS = ['idle', 'x', 'z', 'a', 'idx', 'v', 'progress', 'skip', 'stuck', 'tyre', 'fuel', 'fuelUsed', 'dmg', 'out', 'finished', 'finishPos', 'finishTime', 'time', 'lapStart', 'laps', 'best', 'inPit', 'pitTurns', 'pitWork', 'boxReq', 'draft', 'lastSteer', 'netGone', 'gaveUp'];
 function netAfterMove(k, next) {
   if (MP.host) {
     MP.net.send('fix', { k, round, turnIdx, finishCount, order: order.map(c => cars.indexOf(c)), cars: cars.map(c => Object.fromEntries(FIX_KEYS.map(f => [f, c[f]]))) });
@@ -3411,7 +3436,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.27';
+const GAME_VERSION = 'v0.28';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {

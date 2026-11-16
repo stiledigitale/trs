@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.27** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
+Versione attuale: **v0.28** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -77,7 +77,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 
 ## Grafica e atmosfera (stile "plastico")
 - **Auto (v0.25):** Turismo con carrozzeria a profilo estruso, passaruota, vetri, montante, livrea a strisce (scura sulle auto chiare), tondo del numero sulle porte, minigonne, specchietti, fari e fanali, griglia, splitter, estrattore, scarico, alettone; Formula 1 con muso, abitacolo, cofano con presa d'aria e pinna, pance con prese, fondo, halo, casco con visiera, ala anteriore e posteriore a due elementi con paratie, beam wing, sospensioni. Ruote con cerchio e razze (si vede che girano). **v0.26:** numero di gara vero sulle porte (Turismo) e su cofano motore e muso (F1), legato al colore del pilota: rosso 7, blu 22, giallo 12, verde 5, arancione 31, viola 18, turchese 44, rosa 9; quattro livree a seconda del numero (strisce centrali, fascia laterale con tetto a contrasto, doppie strisce, tetto e cofano a contrasto); Turismo con vetri trasparenti e pilota dentro, **seduto a sinistra** (casco, tuta, sedile, volante); casco F1 nel colore del pilota schiarito, con banda bianca. I pezzi sono uniti in pochi oggetti con i colori sui vertici (`mergeCarParts`, usa `lib/addons/utils/BufferGeometryUtils.js`); alettoni e ruote restano separati perché cadono con i danni (oltre il 50%) e girano.
-- Niente riga tratteggiata al centro della pista (tolta nella v0.27).
+- Niente riga tratteggiata al centro della pista (tolta nella v0.27). Niente sassi sulla ghiaia delle curve (v0.28: i sassi stanno ad almeno `HALF + 11` m dal centro pista, la ghiaia arriva a `HALF + 10`).
 - Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi. **Niente deve sporgere dal bordo del plastico** (regola di Christian): alberi, rocce e oggetti stanno dentro la base, con margine per la chioma.
 - Muretti con striscioni, reti, gomme rosse e bianche, ghiaia, tribune coperte, box con tetto arancione e torre, postazioni dei commissari con il commissario e la bandiera.
 - Case, palazzi, strada perimetrale, parcheggi, torri faro, mongolfiere, folla animata che esulta.
@@ -106,6 +106,7 @@ Due voci separate nel menu principale (v0.21):
 - **Bacheca stanze:** canale Supabase Realtime comune `trs-lobbies` (presence); ogni stanza di "Stanze online" in attesa vi annuncia i suoi dati e sparisce da sola quando l'host esce, chiude la pagina o la gara parte.
 - **Come funziona la rete:** Supabase Realtime (canale della stanza, presence per la lobby, broadcast per i messaggi). Ognuno simula la gara sul proprio computer; viaggiano solo le mosse (`mv`) e tutti le eseguono insieme. L'host decide le mosse delle CPU e dopo ogni mossa manda la **fotografia ufficiale** (`fix`) di tutte le auto e del turno: gli ospiti la applicano prima di continuare, quindi non possono andare fuori sincronia.
 - **Tempo per turno online: 15 secondi a tutti i livelli.** Chi lascia scadere il tempo **resta fermo** (velocità zero); al **secondo turno di fila senza muovere viene espulso** (v0.20). Lo stesso vale per chi non risponde (dopo 23 s l'host lo considera fermo).
+- **Ritiro volontario (v0.28):** nel menu di pausa, solo online, c'è "🏳 Ritirati dalla gara"; dopo la conferma ("Sì, mi ritiro" / "Annulla") parte il messaggio `quit` a tutti, l'auto viene trattata come quella di un disconnesso (al suo turno l'host la parcheggia fuori pista e si ritira, motivo "si è ritirato dalla gara") e chi si ritira resta collegato a guardare, con la camera che passa a "Segui i turni".
 - **Disconnessioni (v0.21):** chi resta assente per più di 5 secondi è "disconnesso"; al suo turno successivo **l'auto viene spostata fuori pista e resta lì, ritirata**. Se esce l'host la partita finisce per tutti.
 - **Online:** la pausa apre il menu ma non ferma gli altri; il box si prenota in rete; niente replay automatici. A fine gara **"Torna alla stanza"** riporta tutti nella lobby per la rivincita.
 - Le mosse si chiudono anche con la scheda nascosta (il browser smette di disegnare): un host in secondo piano non blocca gli altri.
@@ -145,6 +146,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.28:** ritiro volontario online dal menu di pausa; niente sassi sulla ghiaia.
 - **v0.27:** schermata d'attesa dopo il proprio giro di qualifica online, via della qualifica sul dritto, ordine dei turni come la classifica ufficiale, corsia box rifatta, niente riga centrale, replay online, niente tempi CPU in classifica, classifica solo migliori giri con filtro livello.
 - **v0.26.2:** traduzione del "giro più veloce" sul traguardo.
 - **v0.26.1:** pilota della Turismo spostato a sinistra.
