@@ -209,7 +209,7 @@
     <button class="big" data-go="vOnline">Stanze online <small>pubbliche e private</small></button>
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
-    <div class="ver">Prototipo v0.26.2</div>
+    <div class="ver">Prototipo v0.27</div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -279,12 +279,11 @@
 
   <div id="vRank" class="card hidden">
     <h2>Classifica <span>online</span></h2>
-    <p class="sub">I tempi dei piloti umani vengono inviati da soli a fine gara. Un tempo per pilota: il suo migliore.</p>
+    <p class="sub">I migliori giri dei piloti umani, inviati da soli a fine gara. Un tempo per pilota: il suo migliore.</p>
     <div class="foot" style="justify-content:flex-start;margin-top:12px">
       <label>Pista <select id="rkTrack"><option value="monza">Mini Monza</option><option value="prova">Anello di prova</option><option value="dolomiti">Valle delle Dolomiti</option></select></label>
       <label>Classe <select id="rkClass"><option value="turismo">Turismo</option><option value="f1">Formula 1</option></select></label>
-      <label>Tempo <select id="rkKind"><option value="lap">Miglior giro</option><option value="race">Gara completa</option></select></label>
-      <label id="rkLapsBox" class="hidden">Giri <select id="rkLaps"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+      <label>Livello <select id="rkLevel"><option value="">Tutti i livelli</option><option value="facile">Facile</option><option value="medio">Medio</option><option value="pro">Pro</option></select></label>
     </div>
     <div id="rkList" style="margin-top:14px;min-height:120px"></div>
     <div class="foot"><button data-go="vMain">← Indietro</button><button id="rkReload">↻ Aggiorna</button></div>
@@ -374,6 +373,8 @@ const isPro = () => mode === 'pro' || mode === 'ultrapro';   // Ultra Pro = rego
 const COLORS = ['#e63946', '#1d8bf1', '#f4b400', '#2a9d4a', '#ff7f27', '#8e44ad', '#17c3b2', '#ff5d9e'];
 const CAR_NUMS = [7, 22, 12, 5, 31, 18, 44, 9];   // numero di gara legato al colore del pilota: resta lo stesso anche se cambia la griglia
 const carNum = col => CAR_NUMS[COLORS.indexOf(col)] ?? 1;
+const CPU_NAMES = ['CPU Rossi', 'CPU Bianchi', 'CPU Verdi', 'CPU Conti', 'CPU Galli', 'CPU Marino', 'CPU Ferri'];
+const isCpuName = n => /^cpu\b/i.test((n || '').trim());
 const DEFAULT_PLAYERS = [
   { on: true,  name: 'Christian', type: 'human', car: 'bilanciata' },
   { on: true,  name: 'CPU Rossi', type: 'cpu',   car: 'scatto' },
@@ -679,7 +680,6 @@ function buildWorld(key) {
   const white = new THREE.Color(0xf2f2f2), red = new THREE.Color(0xd62b35);
   world.add(ribbon(i => ({ o1: HALF - 0.75, o2: HALF - 0.4, y: 0.075, c: white })));
   world.add(ribbon(i => ({ o1: -HALF + 0.4, o2: -HALF + 0.75, y: 0.075, c: white })));
-  world.add(ribbon(i => (Math.floor(i / 4) % 3 === 0 ? { o1: -0.25, o2: 0.25, y: 0.075, c: white } : null)));
   const curb = i => (Math.floor(i / 2) % 2 ? red : white);
   world.add(ribbon(i => corner(i) ? { o1: HALF, o2: HALF + 1.4, y: 0.1, c: curb(i) } : null));
   world.add(ribbon(i => corner(i) ? { o1: -HALF - 1.4, o2: -HALF, y: 0.1, c: curb(i) } : null));
@@ -735,26 +735,32 @@ function buildWorld(key) {
     }
     if (pitSide) {
       const s = pitSide; pitA = a + 6; pitB = b - 6;
-      const Tp = Math.min(24, Math.floor((pitB - pitA) / 3.2));
+      const Tp = Math.min(34, Math.floor((pitB - pitA) / 3.0));   // raccordi lunghi: ingresso e uscita dolci
       const tAt = new Map();
       for (let k = pitA; k <= pitB; k++) tAt.set(wrap(k), clamp(Math.min(k - pitA, pitB - k) / Tp, 0, 1));
       const lane = new THREE.Color(0x4a4e57), wl = new THREE.Color(0xf2f2f2), yl = new THREE.Color(0xf4c430);
       const off = (i, o1, o2) => s > 0 ? { o1, o2 } : { o1: -o2, o2: -o1 };
-      world.add(ribbon(i => { if (!tAt.has(i)) return null; const t = tAt.get(i), e = t * t * (3 - 2 * t), o1 = HALF - 0.6 + 6.1 * e, o2 = HALF + 0.4 + 12.2 * Math.sqrt(t); return { ...off(i, o1, o2), y: 0.068, c: lane }; }));
-      world.add(ribbon(i => { if (!tAt.has(i) || tAt.get(i) < 1) return null; return { ...off(i, HALF + 12.2, HALF + 12.6), y: 0.075, c: wl }; }));
-      world.add(ribbon(i => { if (!tAt.has(i) || tAt.get(i) < 1 || Math.floor(i / 3) % 2) return null; return { ...off(i, HALF + 8.9, HALF + 9.1), y: 0.075, c: yl }; }));
+      // corsia larga ~10 m, che si apre e si chiude dolcemente (smoothstep sui due bordi)
+      const sm = t => t * t * (3 - 2 * t);
+      const laneIn = t => HALF - 0.6 + 6.4 * sm(t), laneOut = t => HALF + 0.4 + 15.6 * sm(t);
+      world.add(ribbon(i => { if (!tAt.has(i)) return null; const t = tAt.get(i); return { ...off(i, laneIn(t), laneOut(t)), y: 0.068, c: lane }; }));
+      // linee bianche sui due bordi, per tutta la corsia compresi i raccordi
+      world.add(ribbon(i => { if (!tAt.has(i) || tAt.get(i) < 0.06) return null; const o = laneOut(tAt.get(i)); return { ...off(i, o - 0.45, o), y: 0.076, c: wl }; }));
+      world.add(ribbon(i => { if (!tAt.has(i) || tAt.get(i) < 0.06) return null; const o = laneIn(tAt.get(i)); return { ...off(i, o, o + 0.45), y: 0.076, c: wl }; }));
+      // linea gialla tratteggiata in mezzo alla corsia, nel tratto davanti ai box
+      world.add(ribbon(i => { if (!tAt.has(i) || tAt.get(i) < 1 || Math.floor(i / 3) % 2) return null; const m = (laneIn(1) + laneOut(1)) / 2; return { ...off(i, m - 0.12, m + 0.12), y: 0.076, c: yl }; }));
       // muretto
-      const wallIdx = []; for (let k = pitA; k <= pitB; k += 2) if (tAt.get(wrap(k)) >= 1) wallIdx.push(wrap(k));
+      const wallIdx = []; for (let k = pitA; k <= pitB; k += 2) if (tAt.get(wrap(k)) >= 0.5) wallIdx.push(wrap(k));   // il muretto accompagna anche i raccordi
       const wall = new THREE.InstancedMesh(new THREE.BoxGeometry(3.15, 1.1, 0.5), flat(0xffffff), wallIdx.length);
       const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), V = new THREE.Vector3(), ONE = new THREE.Vector3(1, 1, 1), UP = new THREE.Vector3(0, 1, 0);
       const cW = new THREE.Color(0xe8e8e8), cR = new THREE.Color(0xd62b35);
-      wallIdx.forEach((i, j) => { const p = S[i]; Q.setFromAxisAngle(UP, -Math.atan2(p.tz, p.tx)); M.compose(V.set(p.x + p.nx * s * (HALF + 4.4), 0.55, p.z + p.nz * s * (HALF + 4.4)), Q, ONE); wall.setMatrixAt(j, M); wall.setColorAt(j, Math.floor(j / 2) % 2 ? cR : cW); });
+      wallIdx.forEach((i, j) => { const p = S[i], ow = laneIn(tAt.get(i)) - 1.2; Q.setFromAxisAngle(UP, -Math.atan2(p.tz, p.tx)); M.compose(V.set(p.x + p.nx * s * ow, 0.55, p.z + p.nz * s * ow), Q, ONE); wall.setMatrixAt(j, M); wall.setColorAt(j, Math.floor(j / 2) % 2 ? cR : cW); });
       wall.castShadow = true; world.add(wall);
       // garage
       const g0 = pitA + Tp + 4, g1 = pitB - Tp - 4, kc = wrap(Math.round((g0 + g1) / 2)), ds = TRACK_LEN / N;
       PIT = { kc, s, exitIdx: wrap(pitB + 2) };
       const Lg = Math.max(30, (g1 - g0) * ds);
-      const G = frame(kc, s, HALF + 13);
+      const G = frame(kc, s, HALF + 16.4);
       const body = new THREE.Mesh(new THREE.BoxGeometry(Lg, 6.5, 11), flat(0xf3f4f6)); body.position.set(0, 3.25, s * 5.5); body.castShadow = body.receiveShadow = true; G.add(body);
       const glass = new THREE.Mesh(new THREE.BoxGeometry(Lg, 1.5, 0.3), flat(0x1f3550, { roughness: 0.3, metalness: 0.3 })); glass.position.set(0, 5.4, s * -0.1); G.add(glass);
       { const sh = new THREE.Shape(); sh.moveTo(-6, 0); sh.lineTo(6, 0); sh.lineTo(0, 2.6); sh.closePath(); const rg = new THREE.ExtrudeGeometry(sh, { depth: Lg + 0.6, bevelEnabled: false }); rg.translate(0, 0, -(Lg + 0.6) / 2); rg.rotateY(Math.PI / 2); const roofE = new THREE.Mesh(rg, flat(0xe8663d)); roofE.position.set(0, 6.5, s * 5.5); roofE.castShadow = true; G.add(roofE); }
@@ -774,8 +780,8 @@ function buildWorld(key) {
       const pod = [[0, 2.4, 0xf4c430], [-3.2, 1.7, 0xc0c6cf], [3.2, 1.2, 0xcd7f32]];
       for (const [px, ph, pc] of pod) { const b = new THREE.Mesh(new THREE.BoxGeometry(3, ph, 3), flat(pc)); b.position.set(Lg / 2 + 7 + px, ph / 2, s * 6); b.castShadow = true; G.add(b); }
       world.add(G);
-      for (let k = g0 - 8; k <= g1 + 14; k += 8) { const i = wrap(k); obstacles.push({ x: S[i].x + S[i].nx * s * (HALF + 19), z: S[i].z + S[i].nz * s * (HALF + 19), r: 11 }); }
-      for (let k = pitA; k <= pitB; k += 6) { const i = wrap(k); obstacles.push({ x: S[i].x + S[i].nx * s * (HALF + 9), z: S[i].z + S[i].nz * s * (HALF + 9), r: 5 }); }
+      for (let k = g0 - 8; k <= g1 + 14; k += 8) { const i = wrap(k); obstacles.push({ x: S[i].x + S[i].nx * s * (HALF + 22.4), z: S[i].z + S[i].nz * s * (HALF + 22.4), r: 11 }); }
+      for (let k = pitA; k <= pitB; k += 6) { const i = wrap(k); obstacles.push({ x: S[i].x + S[i].nx * s * (HALF + 11), z: S[i].z + S[i].nz * s * (HALF + 11), r: 5 }); }
     }
   }
 
@@ -1881,7 +1887,7 @@ function startGame(cfg, resume) {
       time: 0, lapStart: 0, laps: [], best: null, finishTime: null,
       x, z, a: Math.atan2(gs.tz, gs.tx), v: 0, idx, progress: idx > N / 2 ? idx - N : idx, skip: 0, finished: false, finishPos: 0, trail: [] };
     if (cfg.quali) {   // qualifica: si parte da soli, più indietro del traguardo e già lanciati
-      const back = Math.round(QUALI_BACK_M / (TRACK_LEN / N)), qi = N - back, qs = S[qi];
+      const back = qualiBack(), qi = N - back, qs = S[qi];
       Object.assign(c, { x: qs.x, z: qs.z, a: Math.atan2(qs.tz, qs.tx), idx: qi, progress: -back });
     }
     c.mesh = CLASSES[raceClass].make(c.color); c.label = labelSprite(c.name, c.color); c.mesh.add(c.label); updatePerf(c);
@@ -1896,7 +1902,7 @@ function startGame(cfg, resume) {
   ['menu', 'pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
   showGameUI(true);
   history = []; roundRec = null; lastHL = -10; officialOrder = []; lastOrder = positions(); lastLapShown = false;
-  if (cfg.quali) { for (const c of cars) c.v = Math.round(c.vmax * 0.45); phase = 'wait'; $('lights').classList.add('hidden'); log(`⏱ Qualifica di <b style="color:${cars[0].color}">${cars[0].name}</b>: il tempo parte sul traguardo.`); banner('QUALIFICA', cars[0].color, `${cars[0].name} · giro lanciato`); Portal.gameplayStart(); later(() => nextRound(), 1400); }
+  if (cfg.quali) { for (const c of cars) c.v = Math.round(c.vmax * 0.45); phase = 'wait'; focusCamera(cars[0]); $('lights').classList.add('hidden'); log(`⏱ Qualifica di <b style="color:${cars[0].color}">${cars[0].name}</b>: il tempo parte sul traguardo.`); banner('QUALIFICA', cars[0].color, `${cars[0].name} · giro lanciato`); Portal.gameplayStart(); later(() => nextRound(), 1400); }
   else if (resume) resumeFrom(resume); else startSequence();
 }
 function toMainMenu() {
@@ -1909,7 +1915,7 @@ function toMainMenu() {
   ['pause', 'endScreen'].forEach(id => $(id).classList.add('hidden'));
   $('menu').classList.remove('hidden'); showView('vMain'); updateResumeBtn();
 }
-function nextRound() { order = cars.filter(c => !c.finished && !c.out).sort((a, b) => b.progress - a.progress); turnIdx = 0; recordRoundStart(); beginTurn(); }
+function nextRound() { order = positions().filter(c => !c.finished && !c.out); turnIdx = 0; recordRoundStart(); beginTurn(); }
 function beginTurn() {
   if (checkGameOver()) return;
   if (turnIdx >= order.length) { if (maybeHighlight()) return; round++; return nextRound(); }
@@ -2399,7 +2405,9 @@ function buildTVCams() {
   }
 }
 function maybeHighlight() {
-  if (MP.active || QUALI.active || !OPT.replays || !roundRec || roundRec.best < 4 || !roundRec.focus) return false;   // online niente replay automatici: nessuno resta indietro
+  if (QUALI.active || !OPT.replays || !roundRec || roundRec.best < 4 || !roundRec.focus) return false;
+  // online i replay ci sono, ma solo quando riguardano un giocatore e mai due round di fila: così nessuno aspetta troppo
+  if (MP.active && (roundRec.best < 100 || round - lastHL < 3)) return false;
   // replay dei giocatori umani: sempre; quelli tra CPU: non prima del round 3 e non più di uno ogni 4 round
   if (roundRec.best < 100 && (round < 3 || round - lastHL < 4)) return false;
   lastHL = round;
@@ -2760,6 +2768,12 @@ DEFAULT_PLAYERS.forEach((p, i) => {
   row.innerHTML = `<input type="checkbox" ${p.on ? 'checked' : ''} ${i === 0 ? 'disabled' : ''}><span class="dot" style="background:${COLORS[i]}"></span><input type="text" value="${p.name}" maxlength="13"><select class="t"><option value="human">Umano</option><option value="cpu">CPU</option></select><select class="c">${carOpts}</select>`;
   row.querySelector('.t').value = p.type; row.querySelector('.c').value = p.car;
   row.querySelector('input[type=checkbox]').onchange = e => row.classList.toggle('off', !e.target.checked);
+  const nameEl = row.querySelector('input[type=text]'), typeEl = row.querySelector('.t');
+  typeEl.onchange = () => {
+    const n = nameEl.value.trim();
+    if (typeEl.value === 'human' && isCpuName(n)) nameEl.value = `Giocatore ${i + 1}`;
+    else if (typeEl.value === 'cpu' && (!n || /^giocatore /i.test(n))) nameEl.value = CPU_NAMES[(i - 1 + CPU_NAMES.length) % CPU_NAMES.length];
+  };
   playersEl.appendChild(row);
 });
 function renderClass() {
@@ -3284,6 +3298,14 @@ function stepFlags(now) {
    Ognuno da solo in pista: si parte più indietro del traguardo, già lanciati; il tempo parte sul traguardo
    e si ferma al passaggio successivo. La griglia di partenza va a chi fa il miglior tempo. */
 const QUALI_BACK_M = 90;
+// il giro lanciato parte sull'ultimo tratto dritto prima del traguardo (al massimo QUALI_BACK_M indietro):
+// partire in mezzo a una curva vorrebbe dire uscire di pista già alla prima mossa
+function qualiBack() {
+  const max = Math.round(QUALI_BACK_M / (TRACK_LEN / N));
+  let b = 2;
+  while (b < max && Math.abs(K[((N - b - 1) % N + N) % N]) < 1 / 120) b++;
+  return Math.max(6, b);
+}
 const QUALI = { active: false, timed: false, resolve: null, aborted: false };
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function qualiAbort() { QUALI.aborted = true; QUALI.timed = false; if (QUALI.active) { QUALI.active = false; const r = QUALI.resolve; QUALI.resolve = null; r && r(null); } }
@@ -3297,7 +3319,7 @@ function showQuali(rows, sub, final) {
 }
 // la CPU fa il suo giro "a mente" (niente animazione), un turno alla volta per non bloccare la pagina
 async function simQualiLap(p, cfg) {
-  const pre = ALL_PRESETS[p.car] || PRESETS.bilanciata, b = baseOf(pre), back = Math.round(QUALI_BACK_M / (TRACK_LEN / N)), gi = N - back, s0 = S[gi], lvl = AI[OPT.cpu] || AI.normale;
+  const pre = ALL_PRESETS[p.car] || PRESETS.bilanciata, b = baseOf(pre), back = qualiBack(), gi = N - back, s0 = S[gi], lvl = AI[OPT.cpu] || AI.normale;
   let st = { x: s0.x, z: s0.z, a: Math.atan2(s0.tz, s0.tx), idx: gi, v: Math.round(b.vmax * 0.45), accel: b.accel, brake: b.brake, grip: b.grip, vmax: b.vmax, lat: b.lat, draft: false, lastSteer: 0 };
   let prog = -back, time = 0, start = null, skip = 0;
   const saved = round;
@@ -3355,7 +3377,10 @@ function onQStart(d) {
     await new Promise(res => setTimeout(res, 2000)); if (QUALI.aborted || !MP.quali) return;
     const t = await qualiDrive(d.cfg, me, true); if (QUALI.aborted || !MP.quali) return;
     clearCars(); phase = 'menu';
-    MP.net.send('qtime', { i: d.cfg.players.indexOf(me), t });
+    const mi = d.cfg.players.indexOf(me);
+    if (MP.quali.rows[mi]) MP.quali.rows[mi].t = t;   // il proprio tempo si vede subito
+    showQuali(MP.quali.rows, 'In attesa degli altri piloti…');
+    MP.net.send('qtime', { i: mi, t });
     if (MP.host) {
       for (const [i, p] of d.cfg.players.entries()) if (p.type !== 'human') { showQuali(MP.quali.rows, 'Le CPU fanno il loro giro lanciato…'); const ct = await simQualiLap(p, d.cfg); if (!MP.quali) return; MP.net.send('qtime', { i, t: ct }); }
       MP.qTimer = setTimeout(qualiFinish, 150000);   // chi non finisce entro 2 minuti e mezzo parte in fondo
@@ -3386,7 +3411,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.26.2';
+const GAME_VERSION = 'v0.27';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
@@ -3400,9 +3425,9 @@ async function sbInsert(rows) {
   if (!r.ok) throw new Error('HTTP ' + r.status);
 }
 // migliori tempi, uno per pilota
-async function fetchBoard(track, cls, kind, nLaps) {
+async function fetchBoard(track, cls, kind, level) {
   let q = `select=player,setup,level,time_ms,created_at&track=eq.${track}&car_class=eq.${cls}&kind=eq.${kind}&order=time_ms.asc&limit=300`;
-  if (kind === 'race') q += `&laps=eq.${nLaps}`;
+  if (level) q += `&level=eq.${level}`;
   const rows = await sbGet(q), seen = new Set(), out = [];
   for (const r of rows) { const k = r.player.trim().toLowerCase(); if (seen.has(k)) continue; seen.add(k); out.push(r); if (out.length >= 20) break; }
   return out;
@@ -3410,27 +3435,25 @@ async function fetchBoard(track, cls, kind, nLaps) {
 const esc = t => String(t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
 const LEVEL_LBL = { facile: 'Facile', medio: 'Medio', pro: 'Pro' };
 async function loadLeaderboard() {
-  const box = $('rkList'), track = $('rkTrack').value, cls = $('rkClass').value, kind = $('rkKind').value, nl = +$('rkLaps').value;
-  $('rkLapsBox').classList.toggle('hidden', kind !== 'race');
+  const box = $('rkList'), track = $('rkTrack').value, cls = $('rkClass').value, level = $('rkLevel').value;
   box.innerHTML = '<p class="sub">Carico la classifica…</p>';
   try {
-    const rows = await fetchBoard(track, cls, kind, nl);
+    const rows = await fetchBoard(track, cls, 'lap', level);
     if (!rows.length) { box.innerHTML = '<p class="sub">Ancora nessun tempo qui. Il primo potrebbe essere il tuo!</p>'; return; }
     box.innerHTML = rows.map((r, i) => `<div class="res"><span class="p">${i + 1}°</span><span style="flex:1">${esc(r.player)} <small style="color:#9fb0cc">· ${esc(r.setup)} · ${LEVEL_LBL[r.level] || esc(r.level)}</small><br><small style="color:#9fb0cc">${new Date(r.created_at).toLocaleDateString(LOCALE[LANG])}</small></span><b>${fmtTime(r.time_ms / 1000)}</b></div>`).join('');
   } catch (e) {
     box.innerHTML = '<p class="sub">Classifica non raggiungibile da qui. Funziona sul sito del gioco, con la connessione attiva.</p>';
   }
 }
-['rkTrack', 'rkClass', 'rkKind', 'rkLaps'].forEach(id => $(id).onchange = loadLeaderboard);
+['rkTrack', 'rkClass', 'rkLevel'].forEach(id => $(id).onchange = loadLeaderboard);
 $('rkReload').onclick = loadLeaderboard;
 // a fine gara: miglior giro e tempo totale dei piloti umani
 async function sendOnlineTimes() {
   if (onlineSent || !OPT.online || !Portal.online) return; onlineSent = true;
   const rows = [];
-  for (const c of cars.filter(c => c.human && c.name.trim() && (!MP.active || c.owner === myId))) {
+  for (const c of cars.filter(c => c.human && c.name.trim() && !isCpuName(c.name) && (!MP.active || c.owner === myId))) {
     const base = { player: c.name.trim().slice(0, 13), track: trackKey, car_class: raceClass, setup: c.preset, level: mode === 'ultrapro' ? 'pro' : mode, version: GAME_VERSION };
     if (c.best != null) rows.push({ ...base, kind: 'lap', laps: laps, time_ms: Math.round(c.best * 1000) });
-    if (c.finished && c.finishTime != null) rows.push({ ...base, kind: 'race', laps: laps, time_ms: Math.round(c.finishTime * 1000) });
   }
   if (!rows.length) return;
   const note = document.createElement('p'); note.className = 'sub'; note.id = 'onlineNote'; note.textContent = 'Invio dei tempi alla classifica online…';

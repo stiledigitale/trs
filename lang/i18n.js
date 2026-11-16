@@ -395,6 +395,8 @@ export const DICT = {
   'Classifica non raggiungibile da qui. Funziona sul sito del gioco, con la connessione attiva.': ['Leaderboard unreachable from here. It works on the game’s website, with an active connection.', 'Classement injoignable d’ici. Il fonctionne sur le site du jeu, avec une connexion active.', 'Bestenliste von hier nicht erreichbar. Sie funktioniert auf der Website des Spiels mit aktiver Verbindung.', 'Clasificación inaccesible desde aquí. Funciona en la web del juego, con conexión activa.'],
   'online disattivato': ['online disabled', 'en ligne désactivé', 'online deaktiviert', 'en línea desactivado'],
   'Miglior giro · Mini Monza': ['Best lap · Mini Monza', 'Meilleur tour · Mini Monza', 'Beste Runde · Mini Monza', 'Mejor vuelta · Mini Monza'],
+  'Tutti i livelli': ['All levels', 'Tous les niveaux', 'Alle Stufen', 'Todos los niveles'],
+  'I migliori giri dei piloti umani, inviati da soli a fine gara. Un tempo per pilota: il suo migliore.': ['Human drivers\u2019 best laps, sent automatically at the end of the race. One time per driver: their best.', 'Les meilleurs tours des pilotes humains, envoy\u00e9s automatiquement en fin de course. Un temps par pilote : son meilleur.', 'Die besten Runden der menschlichen Fahrer, am Rennende automatisch gesendet. Eine Zeit pro Fahrer: seine beste.', 'Las mejores vueltas de los pilotos humanos, enviadas solas al final de la carrera. Un tiempo por piloto: el mejor.'],
   'Tipo': ['Type', 'Type', 'Art', 'Tipo'],
   'Giro singolo': ['Single lap', 'Tour unique', 'Einzelne Runde', 'Vuelta única'],
 };

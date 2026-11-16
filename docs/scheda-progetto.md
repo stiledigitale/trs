@@ -1,7 +1,7 @@
 # Tactical Racing Simulator — scheda del progetto
 
 Gioco di corse automobilistiche **a turni**, 3D low poly in stile "plastico", ideato da Christian.
-Versione attuale: **v0.26.2** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
+Versione attuale: **v0.27** (15 novembre 2026). `index.html` più le cartelle `lib/` (Three.js 0.160, client Supabase), `fonts/` (Rubik) e `lang/` (traduzioni): tutto incluso, nessun build, audio e musica sintetizzati dal gioco (nessun file audio).
 **Copia di riferimento:** repository GitHub **stiledigitale/trs** (branch `main`), pubblicato in automatico da Cloudflare Pages su **https://tactical-racing.pages.dev** (pubblico per chi ha il link). Ogni modifica si fa sul repository e il sito si aggiorna da solo. Questa scheda sta anche nel repository (`docs/scheda-progetto.md`) e nel progetto Claude "01_SVILUPPO GIOCHI". Il vecchio artifact "Tactical Racing Simulator — prototipo" è fermo alla v0.13 e non va più aggiornato.
 Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supabase) sono quelli di **Stile Digitale**. Regole comuni per i portali: documento `claude/standard-portali-web.md` del progetto.
 
@@ -11,7 +11,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - A ogni turno il giocatore trascina un **bersaglio** dentro la **cornice** davanti all'auto. La traiettoria è una curva di Bézier quadratica tangente alla direzione attuale, quindi conta l'inerzia.
 - **La distanza si misura dal muso dell'auto.** Il punto scelto è dove arriverà il muso a fine mossa.
 - La lunghezza della mossa è la nuova velocità. **1 turno = 3 secondi di gara**, così i km/h restano realistici.
-- **Ordine dei turni:** a ogni round muove per primo chi è in testa.
+- **Ordine dei turni:** a ogni round muove per primo chi è in testa, secondo la **classifica ufficiale** (dalla v0.27): la posizione cambia solo quando mezza auto ha superato il muso dell'avversaria, quindi turni, frecce ▲▼ e messaggio "SORPASSO!" dicono tutti la stessa cosa (prima l'ordine dei turni cambiava già con le auto appaiate).
 - **Nessuna mossa suggerita** (dalla v0.19, a tutti i livelli): il bersaglio parte dritto alla velocità attuale.
 
 ## La cornice (decisa con Christian, molto importante)
@@ -27,7 +27,7 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - Si sceglie nella gara da soli (**Partenza**) e nella stanza online (impostazione dell'host):
   - **Griglia in ordine:** l'ordine dei piloti (online: host, poi gli ospiti in ordine di arrivo, poi le CPU).
   - **Griglia casuale.**
-  - **Qualifica (giro lanciato):** ognuno da solo in pista, parte **90 m prima del traguardo** già lanciato (45% della velocità massima); il cronometro parte sul traguardo e si ferma al passaggio successivo; la griglia va dal miglior tempo. Chi non fa il tempo parte in fondo. Le CPU fanno il loro giro "a mente", senza animazione. Nella gara da soli i giocatori umani girano uno dopo l'altro, poi compare la griglia con "Via alla gara". **Online** tutti fanno il giro nello stesso momento (15 s per mossa), l'host fa girare le CPU, raccoglie i tempi (al massimo 2 minuti e mezzo), mostra la griglia a tutti e dopo pochi secondi parte la gara. La rivincita rifà la qualifica.
+  - **Qualifica (giro lanciato):** ognuno da solo in pista, parte sull'**ultimo tratto dritto prima del traguardo** (`qualiBack()`, al massimo 90 m: sulla Mini Monza il dritto è corto, circa 70 m, e partire 90 m indietro voleva dire partire dentro l'ultima curva e uscire di pista alla prima mossa) già lanciato (45% della velocità massima); il cronometro parte sul traguardo e si ferma al passaggio successivo; la griglia va dal miglior tempo. Chi non fa il tempo parte in fondo. Le CPU fanno il loro giro "a mente", senza animazione. Nella gara da soli i giocatori umani girano uno dopo l'altro, poi compare la griglia con "Via alla gara". La camera inquadra l'auto anche con la camera automatica spenta. **Online** tutti fanno il giro nello stesso momento (15 s per mossa); appena uno finisce il suo giro vede la schermata con i tempi di tutti (v0.27: prima restava sulla pista vuota vista dall'alto, sembrava che il gioco si fosse rotto), l'host fa girare le CPU, raccoglie i tempi (al massimo 2 minuti e mezzo), mostra la griglia a tutti e dopo pochi secondi parte la gara. La rivincita rifà la qualifica.
 - I colori delle auto restano dei piloti anche quando cambia la posizione in griglia.
 
 ## Regole di gara
@@ -70,13 +70,14 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 - Durante il suo turno il pannello mostra **"CPU sta pensando…"** e la traiettoria compare solo a decisione presa. Nella classifica le CPU hanno la scritta grigia "CPU" (niente icone robot: a Christian non piacciono).
 
 ## Piste
-- **Mini Monza:** ricalcata dalla piantina "MiniMonza" di Christian, a 0,3 m per pixel. Giro di circa 825 m, corsia box funzionante con raccordi lisci, ruderi della sopraelevata, Frecce Tricolori.
+- **Mini Monza:** ricalcata dalla piantina "MiniMonza" di Christian, a 0,3 m per pixel. Giro di circa 825 m, corsia box larga circa 10 m con raccordi lunghi e dolci (smoothstep sui due bordi), linee bianche su entrambi i bordi per tutta la lunghezza e muretto che accompagna anche i raccordi (v0.27), ruderi della sopraelevata, Frecce Tricolori.
 - **Anello di prova:** corto (circa 538 m), con prati, lago, fattoria e pale eoliche.
 - **Valle delle Dolomiti:** lunga (circa 1105 m), con abeti e rocce innevate.
 - **Per ora si corre solo sulla Mini Monza, in tutte le modalità (v0.23):** le altre due piste si vedono con il lucchetto, grigie e con "Presto disponibile" nella gara da soli, "🔒 … · presto" nella stanza online. Si sbloccano cambiando `TRACKS_OPEN` nel codice (e le opzioni di `#lbTrack`).
 
 ## Grafica e atmosfera (stile "plastico")
 - **Auto (v0.25):** Turismo con carrozzeria a profilo estruso, passaruota, vetri, montante, livrea a strisce (scura sulle auto chiare), tondo del numero sulle porte, minigonne, specchietti, fari e fanali, griglia, splitter, estrattore, scarico, alettone; Formula 1 con muso, abitacolo, cofano con presa d'aria e pinna, pance con prese, fondo, halo, casco con visiera, ala anteriore e posteriore a due elementi con paratie, beam wing, sospensioni. Ruote con cerchio e razze (si vede che girano). **v0.26:** numero di gara vero sulle porte (Turismo) e su cofano motore e muso (F1), legato al colore del pilota: rosso 7, blu 22, giallo 12, verde 5, arancione 31, viola 18, turchese 44, rosa 9; quattro livree a seconda del numero (strisce centrali, fascia laterale con tetto a contrasto, doppie strisce, tetto e cofano a contrasto); Turismo con vetri trasparenti e pilota dentro, **seduto a sinistra** (casco, tuta, sedile, volante); casco F1 nel colore del pilota schiarito, con banda bianca. I pezzi sono uniti in pochi oggetti con i colori sui vertici (`mergeCarParts`, usa `lib/addons/utils/BufferGeometryUtils.js`); alettoni e ruote restano separati perché cadono con i danni (oltre il 50%) e girano.
+- Niente riga tratteggiata al centro della pista (tolta nella v0.27).
 - Base di terra marrone, cielo azzurro pulito, erba brillante, alberi tondi. **Niente deve sporgere dal bordo del plastico** (regola di Christian): alberi, rocce e oggetti stanno dentro la base, con margine per la chioma.
 - Muretti con striscioni, reti, gomme rosse e bianche, ghiaia, tribune coperte, box con tetto arancione e torre, postazioni dei commissari con il commissario e la bandiera.
 - Case, palazzi, strada perimetrale, parcheggi, torri faro, mongolfiere, folla animata che esulta.
@@ -85,13 +86,14 @@ Si lavora sempre su questo account Claude; i servizi (GitHub, Cloudflare, Supaba
 ## Replay e telecamere TV
 - **Torrette TV:** ogni telecamera da bordo pista ha la sua postazione (impalcatura alta circa 10 m), a circa 30–40 m dalla pista, scelta **prima** di alberi, rocce, lago e fattoria con una **verifica preliminare** (niente tribune, box, edifici o cartelloni davanti o ai lati) e visuale verso la pista tenuta libera; controllo finale sulla visuale reale. Circa 17 telecamere sulla Mini Monza, 23 sull'Anello di prova, 28 sulle Dolomiti.
 - **Regia:** torretta che guarda il tratto dove si trova l'auto, preferendo quella poco più avanti; se nessuna la vede si passa all'inseguimento. Il replay parte già inquadrando l'auto protagonista.
-- **Replay automatici (highlight):** quelli che coinvolgono un **giocatore umano** partono **sempre**; quelli solo tra CPU: mai prima del round 3, almeno 4 round tra uno e l'altro, solo se riguardano il podio o la vittoria. **Online e in qualifica non ci sono replay automatici.**
+- **Replay automatici (highlight):** quelli che coinvolgono un **giocatore umano** partono **sempre**; quelli solo tra CPU: mai prima del round 3, almeno 4 round tra uno e l'altro, solo se riguardano il podio o la vittoria. In **qualifica** non ci sono replay automatici; **online** (dalla v0.27) ci sono solo quando riguardano un giocatore e mai due round di fila, così nessuno aspetta troppo.
 - **Tasto "⏭ Salta replay"**; funzionano anche Spazio e il clic sulla scena. **Replay completo** a fine gara, con la scritta SORPASSO!.
 
 ## Classifica online (v0.14)
 - Supabase, progetto **stiledigitale_games**, tabella **`trs_lap_records`**: lettura e inserimento pubblici, nessuna modifica o cancellazione, valori assurdi bloccati (tempo tra 5 s e 1 ora, nome 1–13 caratteri, piste e classi ammesse).
-- A fine gara il gioco invia, per ogni pilota umano, il **miglior giro** e il **tempo della gara completa**, più assetto, livello e versione; sotto i risultati mostra la posizione. Online ognuno invia solo i propri tempi. I giri di qualifica non vengono inviati.
-- Menu → **Classifica online**: top 20 per pista, classe e tipo, un tempo per pilota. In "Stanze online" c'è il riquadro **"Migliori giri · Mini Monza"** (top 5) e nella stanza il **record della pista**.
+- A fine gara il gioco invia, per ogni pilota umano, il **miglior giro** (dalla v0.27 solo quello: il tempo della gara completa non si invia più), più assetto, livello e versione; sotto i risultati mostra la posizione. Online ognuno invia solo i propri tempi. I giri di qualifica non vengono inviati.
+- **Mai i tempi delle CPU (v0.27):** i nomi che cominciano per "CPU" sono esclusi dall'invio, e nella schermata Nuova gara cambiando una riga da CPU a Umano il nome "CPU …" viene sostituito con "Giocatore N" (era così che i tempi delle CPU finivano in classifica).
+- Menu → **Classifica online**: solo **migliori giri**, top 20 per **pista, classe e livello** (Tutti/Facile/Medio/Pro; Ultra Pro conta come Pro), un tempo per pilota. In "Stanze online" c'è il riquadro **"Migliori giri · Mini Monza"** (top 5) e nella stanza il **record della pista**.
 - Opzione "Invia i tempi alla classifica online" (Sì di base). Limite noto: un tempo falso inviato a mano è possibile; i vincoli bloccano solo i valori assurdi.
 - **Tempi di prova presenti:** "Christian" 1:04.37 e "Marco" 1:07.54 (Mini Monza, Turismo), dalla prova automatica del 15/11. Christian ha deciso di lasciarli durante i test: **da cancellare prima del lancio**.
 
@@ -143,6 +145,7 @@ Due voci separate nel menu principale (v0.21):
 - **v0.18:** versione per telefono; Frecce Tricolori via al VIA!; online auto CPU a 0 e solo Mini Monza.
 - **v0.19:** stanze aperte in elenco, nome stanza, posti, password, partenza automatica, migliori giri nel multiplayer; online 15 s per turno; nessuna mossa suggerita; in Pro nessun avviso di collisione.
 - **v0.20:** online chi non muove resta fermo; espulso dopo due turni di fila senza muovere.
+- **v0.27:** schermata d'attesa dopo il proprio giro di qualifica online, via della qualifica sul dritto, ordine dei turni come la classifica ufficiale, corsia box rifatta, niente riga centrale, replay online, niente tempi CPU in classifica, classifica solo migliori giri con filtro livello.
 - **v0.26.2:** traduzione del "giro più veloce" sul traguardo.
 - **v0.26.1:** pilota della Turismo spostato a sinistra.
 - **v0.26:** numeri di gara, livree, pilota visibile, casco colorato; cordoli che vibrano con il suono e 40 cm di margine in più prima del testacoda.
