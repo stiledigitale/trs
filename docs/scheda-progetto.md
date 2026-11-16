@@ -108,7 +108,7 @@ Due voci separate nel menu principale (v0.21):
 - **Tempo per turno online: 15 secondi a tutti i livelli.** Chi lascia scadere il tempo **resta fermo** (velocità zero); al **secondo turno di fila senza muovere viene espulso** (v0.20). Lo stesso vale per chi non risponde (dopo 23 s l'host lo considera fermo).
 - **Ritiro volontario (v0.28):** nel menu di pausa, solo online, c'è "🏳 Ritirati dalla gara"; dopo la conferma ("Sì, mi ritiro" / "Annulla") parte il messaggio `quit` a tutti, l'auto viene trattata come quella di un disconnesso (al suo turno l'host la parcheggia fuori pista e si ritira, motivo "si è ritirato dalla gara") e chi si ritira resta collegato a guardare, con la camera che passa a "Segui i turni".
 - **Disconnessioni (v0.21):** chi resta assente per più di 5 secondi è "disconnesso"; al suo turno successivo **l'auto viene spostata fuori pista e resta lì, ritirata**. Se esce l'host la partita finisce per tutti.
-- **Online:** la pausa apre il menu ma non ferma gli altri; il box si prenota in rete; niente replay automatici. A fine gara **"Torna alla stanza"** riporta tutti nella lobby per la rivincita.
+- **Online:** la pausa apre il menu ma non ferma gli altri; il box si prenota in rete; replay automatici solo per gli eventi dei giocatori (v0.27). A fine gara **"Torna alla stanza"** riporta tutti nella lobby per la rivincita.
 - Le mosse si chiudono anche con la scheda nascosta (il browser smette di disegnare): un host in secondo piano non blocca gli altri.
 - **Prove:** con `?net=local` nell'indirizzo la rete è simulata tra le schede dello stesso browser. Verificati il 15/11: sincronizzazione al centesimo, disconnessioni, vero Supabase dal sito, stanze pubbliche e private, partenza automatica, espulsione dopo due turni, qualifica online con griglia uguale per tutti, auto del disconnesso fuori pista. **Prova di Christian:** PC fisso host, Surface e smartphone come ospiti ("hai realizzato il sogno della mia vita").
 
@@ -171,7 +171,7 @@ Due voci separate nel menu principale (v0.21):
 - Le traduzioni: qualche frase del registro di gara può suonare meno naturale, perché alcune frasi sono tradotte a pezzi.
 
 ## Pubblicazione su itch.io (16/11)
-- Pagina creata da Christian sull'account itch.io **stiledigitale**, per ora in Draft. L'indirizzo era `tactical-raging-simulator` (errore: "raging"): da correggere in `tactical-racing-simulator` prima di renderla pubblica.
+- Pagina creata da Christian sull'account itch.io **stiledigitale** e sistemata il 16/11 (donazioni attive con prezzo "$0 or donate" e conto collegato in Payment processors). Il gioco caricato è lo ZIP della v0.26.1: va ricaricato con la versione attuale.
 - Si carica lo ZIP con `index.html`, `lib/`, `fonts/`, `lang/` (Kind of project: HTML, "This file will be played in the browser", viewport 1280×720, Mobile friendly orizzontale, Fullscreen button).
 - Copertina 630×500 / 1260×1000 (gruppo di Turismo in curva con il titolo, scritta "TURN-BASED RACING · ONLINE MULTIPLAYER") e 6 screenshot 1920×1080 in inglese (menu, cornice di mira, F1 sotto il portale, replay TV, risultati, stanza multiplayer), preparati il 16/11.
 - Short Description massimo 120 caratteri.
