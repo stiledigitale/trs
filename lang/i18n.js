@@ -25,6 +25,20 @@ export const DICT = {
   'Prototipo v{}': ['Prototype v{}', 'Prototype v{}', 'Prototyp v{}', 'Prototipo v{}'],
   'Prototipo': ['Prototype', 'Prototype', 'Prototyp', 'Prototipo'],
 
+  // ---------- condivisione ----------
+  '📣 Condividi il gioco': ['📣 Share the game', '📣 Partager le jeu', '📣 Spiel teilen', '📣 Compartir el juego'],
+  '📣 Condividi': ['📣 Share', '📣 Partager', '📣 Teilen', '📣 Compartir'],
+  'Condividi': ['Share', 'Partager', 'Teile', 'Comparte'],
+  'il gioco': ['the game', 'le jeu', 'das Spiel', 'el juego'],
+  '🔗 Copia link': ['🔗 Copy link', '🔗 Copier le lien', '🔗 Link kopieren', '🔗 Copiar enlace'],
+  '✓ Link copiato': ['✓ Link copied', '✓ Lien copié', '✓ Link kopiert', '✓ Enlace copiado'],
+  'Copia non riuscita': ['Copy failed', 'Échec de la copie', 'Kopieren fehlgeschlagen', 'No se pudo copiar'],
+  'Chiudi': ['Close', 'Fermer', 'Schließen', 'Cerrar'],
+  'Ho chiuso {}° a {} in Tactical Racing Simulator, miglior giro {}! Sfidami:': ['I finished P{} at {} in Tactical Racing Simulator, best lap {}! Challenge me:', "J'ai terminé {}e à {} dans Tactical Racing Simulator, meilleur tour {} ! Défie-moi :", 'Ich bin in Tactical Racing Simulator in {1} als {0}. ins Ziel gekommen, schnellste Runde {2}! Fordere mich heraus:', '¡Terminé {}º en {} en Tactical Racing Simulator, mejor vuelta {}! Rétame:'],
+  'Ho chiuso {}° a {} in Tactical Racing Simulator! Sfidami:': ['I finished P{} at {} in Tactical Racing Simulator! Challenge me:', "J'ai terminé {}e à {} dans Tactical Racing Simulator ! Défie-moi :", 'Ich bin in Tactical Racing Simulator in {1} als {0}. ins Ziel gekommen! Fordere mich heraus:', '¡Terminé {}º en {} en Tactical Racing Simulator! Rétame:'],
+  'Corse a turni a {} in Tactical Racing Simulator: riesci a battermi?': ['Turn-based racing at {} in Tactical Racing Simulator: can you beat me?', 'Course au tour par tour à {} dans Tactical Racing Simulator : tu peux me battre ?', 'Rundenbasiertes Rennen in {} in Tactical Racing Simulator: Schaffst du es, mich zu schlagen?', 'Carreras por turnos en {} en Tactical Racing Simulator: ¿puedes ganarme?'],
+  'Gioca con me a Tactical Racing Simulator: corse automobilistiche a turni in 3D, gratis nel browser!': ['Play Tactical Racing Simulator with me: turn-based 3D car racing, free in your browser!', 'Joue avec moi à Tactical Racing Simulator : course automobile au tour par tour en 3D, gratuit dans le navigateur !', 'Spiel mit mir Tactical Racing Simulator: rundenbasierte 3D-Autorennen, kostenlos im Browser!', '¡Juega conmigo a Tactical Racing Simulator: carreras de coches por turnos en 3D, gratis en el navegador!'],
+
   // ---------- nuova gara ----------
   'Nuova': ['New', 'Nouvelle', 'Neues', 'Nueva'],
   'gara': ['race', 'course', 'Rennen', 'carrera'],
