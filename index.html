@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Tactical Racing Simulator — prototipo</title>
+<meta name="description" content="Corse automobilistiche a turni in 3D low poly: gioca da solo, con gli amici o online, gratis nel browser.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Tactical Racing Simulator">
+<meta property="og:description" content="Corse automobilistiche a turni in 3D low poly: gioca da solo, con gli amici o online, gratis nel browser.">
+<meta property="og:url" content="https://tactical-racing.pages.dev/">
+<meta property="og:image" content="https://tactical-racing.pages.dev/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tactical-racing.pages.dev/og.jpg">
 <style>
   @font-face{font-family:Rubik;font-style:normal;font-weight:400;font-display:swap;src:url(fonts/rubik-latin-400-normal.woff2) format('woff2')}
   @font-face{font-family:Rubik;font-style:normal;font-weight:600;font-display:swap;src:url(fonts/rubik-latin-600-normal.woff2) format('woff2')}
@@ -75,6 +85,7 @@
   #sharePanel .sbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
   #sharePanel .sbtns button{display:flex;align-items:center;gap:9px;justify-content:flex-start;font-size:15px;padding:11px 14px}
   #sharePanel .sbtns i{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;font-style:normal;font-weight:700;color:#fff;font-size:14px}
+  #shareImg{display:block;width:100%;aspect-ratio:1200/630;object-fit:cover;border-radius:10px;margin-top:12px;background:#0d1320}
   #shareTxt{background:#0d1320;border-radius:10px;padding:10px 12px;color:#c5d3ea;font-size:13px;margin-top:10px;word-break:break-word}
   .tcard.locked b::before{content:'🔒 '}
   .tcard canvas{width:100%;height:auto;display:block;border-radius:8px;background:#22304a}
@@ -219,7 +230,7 @@
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
     <button id="shareGameBtn">📣 Condividi il gioco</button>
-    <div class="ver">Prototipo v0.29.2<span id="sdLink"> · <a href="https://stiledigitale.net" target="_blank" rel="noopener">Stile Digitale</a></span></div>
+    <div class="ver">Prototipo v0.29.3<span id="sdLink"> · <a href="https://stiledigitale.net" target="_blank" rel="noopener">Stile Digitale</a></span></div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -363,6 +374,7 @@
 <div id="sharePanel" class="overlay hidden">
   <div class="card" style="width:min(440px,94vw)">
     <h2>Condividi <span>il gioco</span></h2>
+    <img src="og.jpg" alt="" id="shareImg" loading="lazy">
     <div id="shareTxt" translate="no"></div>
     <div class="sbtns">
       <button data-sh="wa"><i style="background:#25d366">W</i>WhatsApp</button>
@@ -2959,7 +2971,12 @@ async function openShare(msg) {
   shareMsg = msg;
   const touch = matchMedia('(pointer:coarse)').matches;
   if (touch && navigator.share) {
-    try { await navigator.share({ title: 'Tactical Racing Simulator', text: msg, url: SHARE_URL }); return; }
+    const data = { title: 'Tactical Racing Simulator', text: msg, url: SHARE_URL };
+    try {   // con l'immagine di anteprima, se il telefono lo permette
+      const f = new File([await (await fetch('og.jpg')).blob()], 'tactical-racing-simulator.jpg', { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { data.files = [f]; data.text = msg + ' ' + SHARE_URL; delete data.url; }
+    } catch (e) {}
+    try { await navigator.share(data); return; }
     catch (e) { if (e && e.name === 'AbortError') return; }   // annullato dal giocatore: niente pannello
   }
   $('shareTxt').textContent = msg + ' ' + SHARE_URL;
@@ -3503,7 +3520,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.29.2';
+const GAME_VERSION = 'v0.29.3';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
