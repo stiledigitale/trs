@@ -10,6 +10,7 @@ Corse automobilistiche **a turni**, 3D low poly in stile "plastico", di Stile Di
 Il codice è pronto per i portali: tutto incluso nel pacchetto e un **adattatore** unico (`const Portal` in `index.html`) con le funzioni che i portali chiedono: caricamento finito, inizio/fine partita, pubblicità tra le gare, nome del giocatore. Sul sito non fanno niente; per ogni portale si riempiono solo quelle. Il portale si sceglie con `?portal=nome` o `window.TRS_PORTAL`. L'unico servizio esterno è Supabase, disattivabile con `Portal.online = false`.
 
 ## Versioni
+- **v0.29.2** – il link condiviso sui social è la pagina del gioco su itch.io (https://stiledigitale.itch.io/tactical-raging-simulator).
 - **v0.29.1** – nel menu principale, accanto alla versione, il collegamento a Stile Digitale (stiledigitale.net, si apre in una nuova scheda; nascosto sui portali).
 - **v0.29** – pulsante "📣 Condividi" a fine gara (con posizione, pista e miglior giro) e "Condividi il gioco" nel menu: sul telefono si apre la condivisione del sistema, sul computer un pannello con WhatsApp, Facebook, X, Telegram e Copia link. Solo sul sito: nascosti sui portali.
 - **v0.28** – online ci si può ritirare dal menu di pausa (con conferma): l'auto esce di pista al proprio turno e si resta a guardare la gara; niente più sassi sulla ghiaia delle curve.

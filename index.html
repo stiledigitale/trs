@@ -219,7 +219,7 @@
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
     <button id="shareGameBtn">📣 Condividi il gioco</button>
-    <div class="ver">Prototipo v0.29.1<span id="sdLink"> · <a href="https://stiledigitale.net" target="_blank" rel="noopener">Stile Digitale</a></span></div>
+    <div class="ver">Prototipo v0.29.2<span id="sdLink"> · <a href="https://stiledigitale.net" target="_blank" rel="noopener">Stile Digitale</a></span></div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -2938,7 +2938,7 @@ const Portal = {
 /* ================== CONDIVISIONE SUI SOCIAL ==================
    Solo sul sito (portal = 'web'): i portali di solito non ammettono link esterni.
    Sul telefono si apre la condivisione del sistema; sul computer il pannello con WhatsApp, Facebook, X, Telegram e "Copia link". */
-const SHARE_URL = 'https://tactical-racing.pages.dev';
+const SHARE_URL = 'https://stiledigitale.itch.io/tactical-raging-simulator';   // pagina del gioco su itch.io
 const shareOk = Portal.name === 'web';
 let shareMsg = '';
 function shareResultText() {
@@ -3503,7 +3503,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.29.1';
+const GAME_VERSION = 'v0.29.2';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
