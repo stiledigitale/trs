@@ -68,6 +68,8 @@
   .tcard.sel{border-color:#e63946}
   .tcard.locked{cursor:not-allowed;opacity:.5;filter:grayscale(.7)}
   button.danger{background:#e63946;border-color:#e63946;color:#fff}
+  .ver a{color:#ff5a66;text-decoration:none;font-weight:700}
+  .ver a:hover{text-decoration:underline}
   #shareGameBtn{align-self:flex-start;font-size:13px;padding:7px 14px}
   #sharePanel{z-index:30}
   #sharePanel .sbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
@@ -217,7 +219,7 @@
     <button class="big" data-go="vRank">Classifica online <small>i tempi migliori</small></button>
     <button class="big" data-go="vHelp">Come si gioca</button>
     <button id="shareGameBtn">📣 Condividi il gioco</button>
-    <div class="ver">Prototipo v0.29</div>
+    <div class="ver">Prototipo v0.29.1<span id="sdLink"> · <a href="https://stiledigitale.net" target="_blank" rel="noopener">Stile Digitale</a></span></div>
   </div>
 
   <div id="vSetup" class="card hidden">
@@ -2976,7 +2978,7 @@ $('shareClose').onclick = () => $('sharePanel').classList.add('hidden');
 $('sharePanel').onclick = e => { if (e.target.id === 'sharePanel') $('sharePanel').classList.add('hidden'); };
 $('shareResBtn').onclick = () => openShare(shareResultText());
 $('shareGameBtn').onclick = () => openShare(shareGameText());
-if (!shareOk) { $('shareResBtn').remove(); $('shareGameBtn').remove(); }
+if (!shareOk) { $('shareResBtn').remove(); $('shareGameBtn').remove(); $('sdLink').remove(); }
 // audio spento durante pubblicità e quando la scheda è nascosta
 let adMuted = false;
 function setGameMuted(on) {
@@ -3501,7 +3503,7 @@ function onQGrid(d) {
 /* ================== CLASSIFICA ONLINE (Supabase) ================== */
 // progetto stiledigitale_games: la chiave publishable è fatta per stare nella pagina (la tabella permette solo lettura e inserimento)
 const SB_URL = 'https://skqmwnoewpqflpfaiuzj.supabase.co', SB_KEY = 'sb_publishable_jKb4CFJlNv0nJJHC27WA-A_nH0c3xho';
-const GAME_VERSION = 'v0.29';
+const GAME_VERSION = 'v0.29.1';
 const sbHeaders = extra => ({ apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', ...extra });
 let onlineSent = false;
 async function sbGet(query) {
